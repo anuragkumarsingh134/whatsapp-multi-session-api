@@ -447,7 +447,7 @@
                     document.getElementById('curlFileExample').textContent = `curl -X POST ${baseUrl}/api/messages/send-file \\
   -H "Authorization: Bearer ${apiKey}" \\
   -H "Content-Type: application/json" \\
-  -d '{"deviceId": "${deviceId}", "number": "1234567890", "url": "https://example.com/invoice.pdf", "fileName": "invoice.pdf"}'`;
+  -d '{"deviceId": "${deviceId}", "number": "1234567890", "url": "https://pdfobject.com/pdf/sample.pdf", "fileName": "sample.pdf"}'`;
 
                     // JS Example
                     document.getElementById('jsFileExample').textContent = `await fetch('${baseUrl}/api/messages/send-file', {
@@ -459,13 +459,13 @@
   body: JSON.stringify({
     deviceId: '${deviceId}',
     number: '1234567890',
-    url: 'https://example.com/invoice.pdf',
-    fileName: 'invoice.pdf'
+    url: 'https://pdfobject.com/pdf/sample.pdf',
+    fileName: 'sample.pdf'
   })
 });`;
 
                     // File GET
-                    document.getElementById('getUrlFileExample').textContent = `${baseUrl}/api/messages/send-file?deviceId=${deviceId}&number=1234567890&url=https://example.com/invoice.pdf&fileName=invoice.pdf&apiKey=${apiKey}`;
+                    document.getElementById('getUrlFileExample').textContent = `${baseUrl}/api/messages/send-file?deviceId=${deviceId}&number=1234567890&url=https://pdfobject.com/pdf/sample.pdf&fileName=sample.pdf&apiKey=${apiKey}`;
                 } else {
                     const fallback = "// Please set an API Key for this device to see live examples";
                     ['curlTextExample', 'getUrlTextExample', 'curlFileExample', 'jsFileExample', 'getUrlFileExample'].forEach(id => {
