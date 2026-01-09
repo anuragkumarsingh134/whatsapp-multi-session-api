@@ -112,7 +112,14 @@ router.get('/:deviceId/qr', async (req, res) => {
         const { userId } = req.user;
         const { deviceId } = req.params;
 
-        const session = dbGetSession(deviceId, userId);
+        let session = dbGetSession(deviceId, userId);
+        if (!session) {
+            session = dbGetSession(deviceId);
+            if (session && session.user_id !== null) {
+                return res.status(403).json({ success: false, error: 'Unauthorized access' });
+            }
+        }
+
         if (!session) {
             return res.status(404).json({ success: false, error: 'Session not found' });
         }
@@ -131,7 +138,20 @@ router.put('/:deviceId/api-key', (req, res) => {
         const { deviceId } = req.params;
         let { apiKey } = req.body;
 
-        const session = dbGetSession(deviceId, userId);
+        let session = dbGetSession(deviceId, userId);
+        if (!session) {
+            session = dbGetSession(deviceId);
+            if (session && session.user_id !== null) {
+                return res.status(403).json({ success: false, error: 'Unauthorized access' });
+            }
+
+            // If it's a legacy session, claim it now!
+            if (session && session.user_id === null) {
+                const { db } = require('../db/database');
+                db.prepare('UPDATE sessions SET user_id = ? WHERE device_id = ?').run(userId, deviceId);
+            }
+        }
+
         if (!session) {
             return res.status(404).json({ success: false, error: 'Session not found' });
         }
@@ -159,7 +179,14 @@ router.delete('/:deviceId', async (req, res) => {
         const { userId } = req.user;
         const { deviceId } = req.params;
 
-        const session = dbGetSession(deviceId, userId);
+        let session = dbGetSession(deviceId, userId);
+        if (!session) {
+            session = dbGetSession(deviceId);
+            if (session && session.user_id !== null) {
+                return res.status(403).json({ success: false, error: 'Unauthorized access' });
+            }
+        }
+
         if (!session) {
             return res.status(404).json({ success: false, error: 'Session not found' });
         }
@@ -168,7 +195,7 @@ router.delete('/:deviceId', async (req, res) => {
         await sessionManager.deleteSession(deviceId);
 
         // Delete from database
-        dbDeleteSession(deviceId, userId);
+        dbDeleteSession(deviceId); // Call without userId to force delete legacy or owned session
 
         res.json({ success: true, message: 'Session deleted' });
     } catch (error) {
