@@ -52,6 +52,7 @@ Once connected → Click "Set/Update API Key" → Save the generated key
 
 ### 3. Send Message
 
+**Using POST:**
 ```bash
 curl -X POST http://localhost:3000/api/messages/send \
   -H "Authorization: Bearer YOUR_API_KEY" \
@@ -61,6 +62,11 @@ curl -X POST http://localhost:3000/api/messages/send \
     "number": "1234567890",
     "message": "Hello from API!"
   }'
+```
+
+**Using GET (easier for browser/URL):**
+```
+http://localhost:3000/api/messages/send?deviceId=device-001&number=1234567890&message=Hello&apiKey=YOUR_API_KEY
 ```
 
 ## 🔌 API Endpoints
@@ -73,7 +79,8 @@ curl -X POST http://localhost:3000/api/messages/send \
 | `GET` | `/api/sessions/:deviceId/qr` | Get QR code |
 | `PUT` | `/api/sessions/:deviceId/api-key` | Set/update API key |
 | `DELETE` | `/api/sessions/:deviceId` | Delete session |
-| `POST` | `/api/messages/send` | Send message (requires Bearer auth) |
+| `POST` | `/api/messages/send` | Send message (Bearer auth) |
+| `GET` | `/api/messages/send` | Send message via URL (query params) |
 
 ## 📚 Documentation
 
