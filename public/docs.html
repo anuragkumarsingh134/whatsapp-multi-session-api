@@ -389,6 +389,19 @@
                         <pre id="jsFileExample"></pre>
                     </div>
                 </div>
+
+                <div class="doc-card">
+                    <div class="endpoint">
+                        <span class="method get">GET</span>
+                        <span class="url">/api/messages/send-file</span>
+                    </div>
+                    <p style="font-size: 14px; margin-top: 10px; color: var(--text-dim);">You can also send documents
+                        using a simple HTTP GET request.</p>
+                    <div class="code-block">
+                        <button class="copy-btn">URL</button>
+                        <pre id="getUrlFileExample"></pre>
+                    </div>
+                </div>
             </section>
         </main>
     </div>
@@ -450,9 +463,12 @@
     fileName: 'invoice.pdf'
   })
 });`;
+
+                    // File GET
+                    document.getElementById('getUrlFileExample').textContent = `${baseUrl}/api/messages/send-file?deviceId=${deviceId}&number=1234567890&url=https://example.com/invoice.pdf&fileName=invoice.pdf&apiKey=${apiKey}`;
                 } else {
                     const fallback = "// Please set an API Key for this device to see live examples";
-                    ['curlTextExample', 'getUrlTextExample', 'curlFileExample', 'jsFileExample'].forEach(id => {
+                    ['curlTextExample', 'getUrlTextExample', 'curlFileExample', 'jsFileExample', 'getUrlFileExample'].forEach(id => {
                         document.getElementById(id).textContent = fallback;
                     });
                 }
