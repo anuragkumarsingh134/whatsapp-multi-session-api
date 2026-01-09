@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp API - Sessions</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #075e54;
+            margin-bottom: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            background: #128c7e;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .btn:hover {
+            background: #075e54;
+        }
+
+        .btn-secondary {
+            background: #0288d1;
+        }
+
+        .btn-secondary:hover {
+            background: #0277bd;
+        }
+
+        .sessions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .session-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .session-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .device-id {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .status.disconnected {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .status.waiting_qr {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .status.connected {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .info {
+            color: #666;
+            font-size: 14px;
+            margin: 5px 0;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .empty-state h2 {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 30px;
+            border-radius: 8px;
+        }
+
+        .modal-content h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-actions button {
+            flex: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>WhatsApp API - Sessions</h1>
+            <button class="btn" onclick="showCreateModal()">+ Create New Session</button>
+        </div>
+
+        <div id="sessions-container"></div>
+    </div>
+
+    <!-- Create Session Modal -->
+    <div id="createModal" class="modal">
+        <div class="modal-content">
+            <h2>Create New Session</h2>
+            <div class="form-group">
+                <label>Device ID</label>
+                <input type="text" id="deviceIdInput" placeholder="e.g., device-001">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="hideCreateModal()">Cancel</button>
+                <button class="btn" onclick="createSession()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadSessions() {
+            try {
+                const res = await fetch('/api/sessions');
+                const data = await res.json();
+
+                const container = document.getElementById('sessions-container');
+
+                if (!data.sessions || data.sessions.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <h2>No sessions found</h2>
+                            <p>Create your first WhatsApp session to get started</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = '<div class="sessions-grid">' + data.sessions.map(s => `
+                    <div class="session-card" onclick="openSession('${s.deviceId}')">
+                        <div class="device-id">${s.deviceId}</div>
+                        <div class="status ${s.connectionState}">${formatState(s.connectionState)}</div>
+                        <div class="info">API Key: ${s.hasApiKey ? '✓ Configured' : '✗ Not Set'}</div>
+                        ${s.phoneNumber ? `<div class="info">Phone: ${s.phoneNumber}</div>` : ''}
+                        <div class="info">Created: ${new Date(s.createdAt).toLocaleDateString()}</div>
+                    </div>
+                `).join('') + '</div>';
+            } catch (error) {
+                console.error('Error loading sessions:', error);
+            }
+        }
+
+        function formatState(state) {
+            return state.replace('_', ' ').toUpperCase();
+        }
+
+        function openSession(deviceId) {
+            window.location.href = `/session/${deviceId}`;
+        }
+
+        function showCreateModal() {
+            document.getElementById('createModal').style.display = 'block';
+        }
+
+        function hideCreateModal() {
+            document.getElementById('createModal').style.display = 'none';
+            document.getElementById('deviceIdInput').value = '';
+        }
+
+        async function createSession() {
+            const deviceId = document.getElementById('deviceIdInput').value.trim();
+
+            if (!deviceId) {
+                alert('Please enter a device ID');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/sessions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ deviceId })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    hideCreateModal();
+                    loadSessions();
+                    // Redirect to session detail
+                    setTimeout(() => openSession(deviceId), 500);
+                } else {
+                    alert(data.error || 'Failed to create session');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // Load sessions on page load
+        loadSessions();
+
+        // Refresh every 5 seconds
+        setInterval(loadSessions, 5000);
+    </script>
+</body>
+
+</html>

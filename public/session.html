@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Detail</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .back-link {
+            color: #128c7e;
+            text-decoration: none;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        h1 {
+            color: #075e54;
+            margin-bottom: 10px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .status.disconnected {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .status.waiting_qr {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .status.connected {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .info-row {
+            margin: 10px 0;
+            color: #666;
+        }
+
+        .info-row strong {
+            color: #333;
+        }
+
+        .qr-container {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .qr-container img {
+            max-width: 300px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .btn {
+            background: #128c7e;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            background: #075e54;
+        }
+
+        .btn-danger {
+            background: #c62828;
+        }
+
+        .btn-danger:hover {
+            background: #b71c1c;
+        }
+
+        .btn-secondary {
+            background: #0288d1;
+        }
+
+        .btn-secondary:hover {
+            background: #0277bd;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .api-key-display {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="/" class="back-link">← Back to Sessions</a>
+
+        <h1 id="deviceIdTitle">Loading...</h1>
+
+        <div class="card">
+            <div id="statusBadge" class="status">Loading...</div>
+            <div id="sessionInfo"></div>
+        </div>
+
+        <!-- QR Code Section -->
+        <div id="qrSection" class="card hidden">
+            <h2>Scan QR Code</h2>
+            <div class="qr-container" id="qrContainer">
+                <p>Loading QR code...</p>
+            </div>
+        </div>
+
+        <!-- API Key Management -->
+        <div id="apiKeySection" class="card hidden">
+            <h2>API Key Management</h2>
+            <div id="apiKeyDisplay"></div>
+            <button class="btn btn-secondary" onclick="showApiKeyForm()">Set/Update API Key</button>
+
+            <div id="apiKeyForm" class="hidden" style="margin-top: 15px;">
+                <div class="form-group">
+                    <label>New API Key (leave empty to auto-generate)</label>
+                    <input type="text" id="apiKeyInput" placeholder="Optional: enter custom key">
+                </div>
+                <button class="btn" onclick="updateApiKey()">Save API Key</button>
+                <button class="btn btn-secondary" onclick="hideApiKeyForm()">Cancel</button>
+            </div>
+        </div>
+
+        <!-- Send Message -->
+        <div id="messageSection" class="card hidden">
+            <h2>Send Test Message</h2>
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="text" id="phoneInput" placeholder="e.g., 1234567890">
+            </div>
+            <div class="form-group">
+                <label>Message</label>
+                <textarea id="messageInput" rows="3" placeholder="Hello World"></textarea>
+            </div>
+            <button class="btn" onclick="sendMessage()">Send Message</button>
+        </div>
+
+        <!-- Actions -->
+        <div class="card">
+            <h2>Actions</h2>
+            <button class="btn btn-danger" onclick="deleteSession()">Delete Session</button>
+        </div>
+    </div>
+
+    <script>
+        const deviceId = window.location.pathname.split('/').pop();
+        let currentSession = null;
+
+        async function loadSession() {
+            try {
+                const res = await fetch(`/api/sessions/${deviceId}`);
+                const data = await res.json();
+
+                if (!data.success) {
+                    alert('Session not found');
+                    window.location.href = '/';
+                    return;
+                }
+
+                currentSession = data.session;
+                updateUI();
+            } catch (error) {
+                console.error('Error loading session:', error);
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('deviceIdTitle').textContent = currentSession.deviceId;
+
+            const statusBadge = document.getElementById('statusBadge');
+            statusBadge.className = `status ${currentSession.connectionState}`;
+            statusBadge.textContent = formatState(currentSession.connectionState);
+
+            document.getElementById('sessionInfo').innerHTML = `
+                <div class="info-row"><strong>Device ID:</strong> ${currentSession.deviceId}</div>
+                <div class="info-row"><strong>Connection State:</strong> ${formatState(currentSession.connectionState)}</div>
+                <div class="info-row"><strong>API Key:</strong> ${currentSession.hasApiKey ? currentSession.apiKeyMasked : 'Not Set'}</div>
+                ${currentSession.phoneNumber ? `<div class="info-row"><strong>Phone:</strong> ${currentSession.phoneNumber}</div>` : ''}
+            `;
+
+            // Show/hide sections based on state
+            if (currentSession.connectionState === 'waiting_qr') {
+                document.getElementById('qrSection').classList.remove('hidden');
+                loadQRCode();
+            } else {
+                document.getElementById('qrSection').classList.add('hidden');
+            }
+
+            if (currentSession.connectionState === 'connected') {
+                document.getElementById('apiKeySection').classList.remove('hidden');
+                document.getElementById('messageSection').classList.remove('hidden');
+                updateApiKeyDisplay();
+            } else {
+                document.getElementById('apiKeySection').classList.add('hidden');
+                document.getElementById('messageSection').classList.add('hidden');
+            }
+        }
+
+        async function loadQRCode() {
+            try {
+                const res = await fetch(`/api/sessions/${deviceId}/qr`);
+                const data = await res.json();
+
+                const container = document.getElementById('qrContainer');
+                if (data.qrImage) {
+                    container.innerHTML = `<img src="${data.qrImage}" alt="QR Code"><p>Scan with WhatsApp</p>`;
+                } else {
+                    container.innerHTML = `<p>${data.message || 'QR not available'}</p>`;
+                }
+            } catch (error) {
+                console.error('Error loading QR:', error);
+            }
+        }
+
+        function updateApiKeyDisplay() {
+            const display = document.getElementById('apiKeyDisplay');
+            if (currentSession.hasApiKey) {
+                display.innerHTML = `<div class="api-key-display">${currentSession.apiKeyMasked}</div>`;
+            } else {
+                display.innerHTML = `<p>No API key configured</p>`;
+            }
+        }
+
+        function showApiKeyForm() {
+            document.getElementById('apiKeyForm').classList.remove('hidden');
+        }
+
+        function hideApiKeyForm() {
+            document.getElementById('apiKeyForm').classList.add('hidden');
+            document.getElementById('apiKeyInput').value = '';
+        }
+
+        async function updateApiKey() {
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+
+            try {
+                const res = await fetch(`/api/sessions/${deviceId}/api-key`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ apiKey: apiKey || undefined })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    alert(`API Key updated!\n\nYour API Key: ${data.apiKey}\n\nSave this key securely. It won't be shown again.`);
+                    hideApiKeyForm();
+                    loadSession();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function sendMessage() {
+            const phone = document.getElementById('phoneInput').value.trim();
+            const message = document.getElementById('messageInput').value.trim();
+
+            if (!phone || !message) {
+                alert('Please enter phone number and message');
+                return;
+            }
+
+            if (!currentSession.hasApiKey) {
+                alert('Please set an API key first');
+                return;
+            }
+
+            const apiKey = prompt('Enter your API key to send message:');
+            if (!apiKey) return;
+
+            try {
+                const res = await fetch('/api/messages/send', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({ deviceId, number: phone, message })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    alert('Message sent successfully!');
+                    document.getElementById('phoneInput').value = '';
+                    document.getElementById('messageInput').value = '';
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function deleteSession() {
+            if (!confirm(`Are you sure you want to delete session ${deviceId}?`)) {
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/sessions/${deviceId}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    alert('Session deleted');
+                    window.location.href = '/';
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        function formatState(state) {
+            return state.replace('_', ' ').toUpperCase();
+        }
+
+        // Load session on page load
+        loadSession();
+
+        // Auto-refresh every 3 seconds
+        setInterval(loadSession, 3000);
+    </script>
+</body>
+
+</html>
