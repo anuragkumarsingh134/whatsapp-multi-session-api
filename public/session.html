@@ -250,13 +250,24 @@
 <body>
     <div class="container">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-            <a href="/" class="back-link" style="margin-bottom: 0;">
-                <svg class="icon" viewBox="0 0 24 24">
-                    <line x1="19" y1="12" x2="5" y2="12"></line>
-                    <polyline points="12 19 5 12 12 5"></polyline>
-                </svg>
-                Back to Sessions
-            </a>
+            <div style="display: flex; gap: 15px; align-items: center;">
+                <a href="/" class="back-link" style="margin-bottom: 0;">
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    Back to Sessions
+                </a>
+                <a href="#" onclick="window.location.href += '/docs'" class="btn btn-secondary"
+                    style="padding: 8px 16px; font-size: 13px; text-decoration: none; background: var(--accent); color: white; border: none; display: flex; align-items: center; gap: 8px;">
+                    <svg class="icon" style="width: 14px; height: 14px;" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                    API Documentation
+                </a>
+            </div>
             <div id="userProfile" style="display: flex; align-items: center; gap: 15px;">
                 <span id="usernameDisplay" style="color: #cbd5e1; font-weight: 600;"></span>
                 <button class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px;"
@@ -378,40 +389,6 @@
             </button>
         </div>
 
-        <div id="apiDocsSection" class="card hidden">
-            <h2>
-                <svg class="icon" viewBox="0 0 24 24">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14 2 14 8 20 8"></polyline>
-                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                    <polyline points="10 9 9 9 8 9"></polyline>
-                </svg>
-                API Documentation
-            </h2>
-            <div id="docsContent">
-                <div class="form-group">
-                    <label>cURL (POST JSON)</label>
-                    <div class="api-key-display" id="curlPostExample"></div>
-                </div>
-                <div class="form-group">
-                    <label>cURL (GET URL)</label>
-                    <div class="api-key-display" id="curlGetExample"></div>
-                </div>
-                <div class="form-group">
-                    <label>JavaScript (Fetch)</label>
-                    <div class="api-key-display" id="jsExample"></div>
-                </div>
-                <div class="form-group">
-                    <label>Python (Requests)</label>
-                    <div class="api-key-display" id="pythonExample"></div>
-                </div>
-                <div class="form-group">
-                    <label>Send PDF (cURL)</label>
-                    <div class="api-key-display" id="curlFileExample"></div>
-                </div>
-            </div>
-        </div>
 
         <div class="card">
             <h2>
@@ -504,62 +481,14 @@
                 document.getElementById('apiKeySection').classList.remove('hidden');
                 document.getElementById('messageSection').classList.remove('hidden');
                 document.getElementById('pdfSection').classList.remove('hidden');
-                document.getElementById('apiDocsSection').classList.remove('hidden');
                 updateApiKeyDisplay();
-                updateApiDocs();
             } else {
                 document.getElementById('apiKeySection').classList.add('hidden');
                 document.getElementById('messageSection').classList.add('hidden');
                 document.getElementById('pdfSection').classList.add('hidden');
-                document.getElementById('apiDocsSection').classList.add('hidden');
             }
         }
 
-        function updateApiDocs() {
-            if (!currentSession.hasApiKey) return;
-
-            const baseUrl = window.location.origin;
-            const key = currentSession.apiKey;
-            const device = currentSession.deviceId;
-
-            document.getElementById('curlPostExample').textContent = `curl -X POST ${baseUrl}/api/messages/send \\
-  -H "Authorization: Bearer ${key}" \\
-  -H "Content-Type: application/json" \\
-  -d '{"deviceId": "${device}", "number": "1234567890", "message": "Hello World"}'`;
-
-            document.getElementById('curlGetExample').textContent = `${baseUrl}/api/messages/send?deviceId=${device}&number=1234567890&message=Hello+World&apiKey=${key}`;
-
-            document.getElementById('jsExample').textContent = `await fetch('${baseUrl}/api/messages/send', {
-  method: 'POST',
-  headers: {
-    'Authorization': 'Bearer ${key}',
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    deviceId: '${device}',
-    number: '1234567890',
-    message: 'Hello World'
-  })
-});`;
-
-            document.getElementById('pythonExample').textContent = `import requests
-
-url = "${baseUrl}/api/messages/send"
-headers = {"Authorization": "Bearer ${key}"}
-payload = {
-    "deviceId": "${device}",
-    "number": "1234567890",
-    "message": "Hello World"
-}
-
-response = requests.post(url, json=payload, headers=headers)
-print(response.json())`;
-
-            document.getElementById('curlFileExample').textContent = `curl -X POST ${baseUrl}/api/messages/send-file \\
-  -H "Authorization: Bearer ${key}" \\
-  -H "Content-Type: application/json" \\
-  -d '{"deviceId": "${device}", "number": "1234567890", "url": "https://example.com/doc.pdf", "fileName": "inivice.pdf"}'`;
-        }
 
         async function loadQRCode() {
             try {

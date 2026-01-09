@@ -34,6 +34,11 @@ app.get('/session/:deviceId', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/session.html'));
 });
 
+// API Documentation page route
+app.get('/session/:deviceId/docs', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/docs.html'));
+});
+
 app.listen(PORT, async () => {
     console.log(`Server is running on port ${PORT}`);
 
