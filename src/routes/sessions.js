@@ -83,7 +83,7 @@ router.get('/:deviceId', (req, res) => {
                 deviceId: session.device_id,
                 connectionState: session.connection_state,
                 hasApiKey: !!session.api_key,
-                apiKeyMasked: session.api_key ? `${session.api_key.substring(0, 8)}...` : null,
+                apiKey: session.api_key,
                 phoneNumber: session.phone_number,
                 createdAt: session.created_at
             }

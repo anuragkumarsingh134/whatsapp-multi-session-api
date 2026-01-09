@@ -418,7 +418,7 @@
             document.getElementById('sessionInfo').innerHTML = `
                 <div class="info-row"><strong>Device ID:</strong> ${currentSession.deviceId}</div>
                 <div class="info-row"><strong>Connection State:</strong> ${formatState(currentSession.connectionState)}</div>
-                <div class="info-row"><strong>API Key:</strong> ${currentSession.hasApiKey ? currentSession.apiKeyMasked : 'Not Set'}</div>
+                <div class="info-row"><strong>API Key:</strong> ${currentSession.hasApiKey ? currentSession.apiKey : 'Not Set'}</div>
                 ${currentSession.phoneNumber ? `<div class="info-row"><strong>Phone:</strong> ${currentSession.phoneNumber}</div>` : ''}
             `;
 
@@ -466,7 +466,7 @@
         function updateApiKeyDisplay() {
             const display = document.getElementById('apiKeyDisplay');
             if (currentSession.hasApiKey) {
-                display.innerHTML = `<div class="api-key-display">${currentSession.apiKeyMasked}</div>`;
+                display.innerHTML = `<div class="api-key-display">${currentSession.apiKey}</div>`;
             } else {
                 display.innerHTML = `<p style="color: #94a3b8;">No API key configured</p>`;
             }
