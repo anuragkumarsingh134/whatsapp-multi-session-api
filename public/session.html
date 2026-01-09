@@ -433,6 +433,9 @@
                 }
 
                 currentSession = data.session;
+                // Robust property access
+                currentSession.apiKey = currentSession.apiKey || currentSession.api_key;
+                console.log('Session loaded:', currentSession.deviceId, 'Has Key:', currentSession.hasApiKey);
                 updateUI();
             } catch (error) {
                 console.error('Error loading session:', error);
@@ -449,7 +452,7 @@
             document.getElementById('sessionInfo').innerHTML = `
                 <div class="info-row"><strong>Device ID:</strong> ${currentSession.deviceId}</div>
                 <div class="info-row"><strong>Connection State:</strong> ${formatState(currentSession.connectionState)}</div>
-                <div class="info-row"><strong>API Key:</strong> ${currentSession.hasApiKey ? currentSession.apiKey : 'Not Set'}</div>
+                <div class="info-row"><strong>API Key:</strong> ${currentSession.hasApiKey ? (currentSession.apiKey || currentSession.api_key || '<span style="color: #ef4444">Error: Key missing</span>') : 'Not Set'}</div>
                 ${currentSession.phoneNumber ? `<div class="info-row"><strong>Phone:</strong> ${currentSession.phoneNumber}</div>` : ''}
             `;
 

@@ -71,11 +71,22 @@ router.get('/:deviceId', (req, res) => {
     try {
         const { userId } = req.user;
         const { deviceId } = req.params;
-        const session = dbGetSession(deviceId, userId);
+
+        // Try getting by userId first, then fallback to global (for legacy sessions)
+        let session = dbGetSession(deviceId, userId);
+        if (!session) {
+            session = dbGetSession(deviceId);
+            // If it's a legacy session (user_id is null), allow access and maybe claim it?
+            if (session && session.user_id !== null) {
+                return res.status(403).json({ success: false, error: 'Unauthorized access' });
+            }
+        }
 
         if (!session) {
             return res.status(404).json({ success: false, error: 'Session not found' });
         }
+
+        console.log(`[SessionDetail] Fetching details for ${deviceId}, keyed: ${!!session.api_key}`);
 
         res.json({
             success: true,
@@ -84,11 +95,13 @@ router.get('/:deviceId', (req, res) => {
                 connectionState: session.connection_state,
                 hasApiKey: !!session.api_key,
                 apiKey: session.api_key,
+                api_key: session.api_key, // Fallback for any legacy frontend code
                 phoneNumber: session.phone_number,
                 createdAt: session.created_at
             }
         });
     } catch (error) {
+        console.error('Error in GET /:deviceId:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
