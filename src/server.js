@@ -3,6 +3,7 @@ const cors = require('cors');
 const path = require('path');
 const sessionRoutes = require('./routes/sessions');
 const messageRoutes = require('./routes/messages');
+const { initializeSessions } = require('./services/sessionManager');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -22,6 +23,11 @@ app.get('/session/:deviceId', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/session.html'));
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
     console.log(`Server is running on port ${PORT}`);
+
+    // Initialize sessions from database
+    console.log('Initializing sessions from database...');
+    await initializeSessions();
+    console.log('Session initialization complete');
 });

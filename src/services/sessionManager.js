@@ -156,11 +156,31 @@ const listSessions = () => {
     return sessions;
 };
 
+/**
+ * Initialize sessions from database on startup
+ */
+const initializeSessions = async () => {
+    const { getAllSessions } = require('../db/database');
+    const sessions = getAllSessions();
+
+    console.log(`Found ${sessions.length} session(s) in database`);
+
+    for (const session of sessions) {
+        try {
+            console.log(`Restoring session: ${session.device_id}`);
+            await createSession(session.device_id);
+        } catch (error) {
+            console.error(`Failed to restore session ${session.device_id}:`, error.message);
+        }
+    }
+};
+
 module.exports = {
     createSession,
     getSession,
     getQRCode,
     sendMessage,
     deleteSession,
-    listSessions
+    listSessions,
+    initializeSessions
 };
