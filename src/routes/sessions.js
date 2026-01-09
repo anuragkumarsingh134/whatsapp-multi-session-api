@@ -156,9 +156,9 @@ router.put('/:deviceId/api-key', (req, res) => {
             return res.status(404).json({ success: false, error: 'Session not found' });
         }
 
-        // Generate API key if not provided
+        // Generate API key if not provided (exactly 32 hex characters)
         if (!apiKey) {
-            apiKey = crypto.randomBytes(32).toString('hex');
+            apiKey = crypto.randomBytes(16).toString('hex');
         }
 
         setApiKey(deviceId, apiKey);
