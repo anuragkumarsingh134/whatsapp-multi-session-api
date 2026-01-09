@@ -6,14 +6,23 @@ const db = new Database(DB_PATH);
 
 // Initialize database schema
 db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE TABLE IF NOT EXISTS sessions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
         device_id TEXT UNIQUE NOT NULL,
         connection_state TEXT DEFAULT 'disconnected' CHECK(connection_state IN ('disconnected', 'waiting_qr', 'connected')),
         api_key TEXT,
         phone_number TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
 
     CREATE TABLE IF NOT EXISTS auth_state (
@@ -26,19 +35,47 @@ db.exec(`
 
     CREATE INDEX IF NOT EXISTS idx_auth_state_device ON auth_state(device_id);
     CREATE INDEX IF NOT EXISTS idx_sessions_state ON sessions(connection_state);
+    CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
 `);
 
+// Migration: Add user_id to sessions if it doesn't exist
+try {
+    db.exec('ALTER TABLE sessions ADD COLUMN user_id INTEGER');
+} catch (e) {
+    // Column already exists or other error
+}
+
 // Helper functions
-const sessionHelpers = {
-    createSession: (deviceId) => {
-        return db.prepare('INSERT INTO sessions (device_id) VALUES (?)').run(deviceId);
+const helpers = {
+    // User functions
+    createUser: (username, hPassword) => {
+        return db.prepare('INSERT INTO users (username, password) VALUES (?, ?)').run(username, hPassword);
     },
 
-    getSession: (deviceId) => {
+    getUserByUsername: (username) => {
+        return db.prepare('SELECT * FROM users WHERE username = ?').get(username);
+    },
+
+    getUserById: (id) => {
+        return db.prepare('SELECT * FROM users WHERE id = ?').get(id);
+    },
+
+    // Session functions
+    createSession: (deviceId, userId) => {
+        return db.prepare('INSERT INTO sessions (device_id, user_id) VALUES (?, ?)').run(deviceId, userId);
+    },
+
+    getSession: (deviceId, userId) => {
+        if (userId) {
+            return db.prepare('SELECT * FROM sessions WHERE device_id = ? AND user_id = ?').get(deviceId, userId);
+        }
         return db.prepare('SELECT * FROM sessions WHERE device_id = ?').get(deviceId);
     },
 
-    getAllSessions: () => {
+    getAllSessions: (userId) => {
+        if (userId) {
+            return db.prepare('SELECT * FROM sessions WHERE user_id = ? ORDER BY created_at DESC').all(userId);
+        }
         return db.prepare('SELECT * FROM sessions ORDER BY created_at DESC').all();
     },
 
@@ -57,8 +94,12 @@ const sessionHelpers = {
             .run(apiKey, deviceId);
     },
 
-    deleteSession: (deviceId) => {
-        // Delete auth state (cascade should handle this, but explicit is better)
+    deleteSession: (deviceId, userId) => {
+        if (userId) {
+            const session = db.prepare('SELECT id FROM sessions WHERE device_id = ? AND user_id = ?').get(deviceId, userId);
+            if (!session) return { changes: 0 };
+        }
+        // Delete auth state
         db.prepare('DELETE FROM auth_state WHERE device_id = ?').run(deviceId);
         return db.prepare('DELETE FROM sessions WHERE device_id = ?').run(deviceId);
     },
@@ -70,4 +111,4 @@ const sessionHelpers = {
     }
 };
 
-module.exports = { db, ...sessionHelpers };
+module.exports = { db, ...helpers };

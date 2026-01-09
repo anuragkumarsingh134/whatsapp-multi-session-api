@@ -249,13 +249,20 @@
 
 <body>
     <div class="container">
-        <a href="/" class="back-link">
-            <svg class="icon" viewBox="0 0 24 24">
-                <line x1="19" y1="12" x2="5" y2="12"></line>
-                <polyline points="12 19 5 12 12 5"></polyline>
-            </svg>
-            Back to Sessions
-        </a>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <a href="/" class="back-link" style="margin-bottom: 0;">
+                <svg class="icon" viewBox="0 0 24 24">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                Back to Sessions
+            </a>
+            <div id="userProfile" style="display: flex; align-items: center; gap: 15px;">
+                <span id="usernameDisplay" style="color: #cbd5e1; font-weight: 600;"></span>
+                <button class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px;"
+                    onclick="logout()">Logout</button>
+            </div>
+        </div>
 
         <h1 id="deviceIdTitle">Loading...</h1>
 
@@ -357,12 +364,35 @@
     </div>
 
     <script>
+        // Auth check
+        const token = localStorage.getItem('wa_api_token');
+        if (!token) {
+            window.location.href = '/login';
+        }
+
+        const user = JSON.parse(localStorage.getItem('wa_api_user') || '{}');
+        document.getElementById('usernameDisplay').textContent = user.username || '';
+
+        function logout() {
+            localStorage.removeItem('wa_api_token');
+            localStorage.removeItem('wa_api_user');
+            window.location.href = '/login';
+        }
+
         const deviceId = window.location.pathname.split('/').pop();
         let currentSession = null;
 
         async function loadSession() {
             try {
-                const res = await fetch(`/api/sessions/${deviceId}`);
+                const res = await fetch(`/api/sessions/${deviceId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (res.status === 401) {
+                    logout();
+                    return;
+                }
+
                 const data = await res.json();
 
                 if (!data.success) {
@@ -411,7 +441,15 @@
 
         async function loadQRCode() {
             try {
-                const res = await fetch(`/api/sessions/${deviceId}/qr`);
+                const res = await fetch(`/api/sessions/${deviceId}/qr`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (res.status === 401) {
+                    logout();
+                    return;
+                }
+
                 const data = await res.json();
 
                 const container = document.getElementById('qrContainer');
@@ -449,9 +487,17 @@
             try {
                 const res = await fetch(`/api/sessions/${deviceId}/api-key`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
                     body: JSON.stringify({ apiKey: apiKey || undefined })
                 });
+
+                if (res.status === 401) {
+                    logout();
+                    return;
+                }
 
                 const data = await res.json();
 
@@ -515,8 +561,14 @@
 
             try {
                 const res = await fetch(`/api/sessions/${deviceId}`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
+
+                if (res.status === 401) {
+                    logout();
+                    return;
+                }
 
                 const data = await res.json();
 

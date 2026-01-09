@@ -2,12 +2,17 @@ const express = require('express');
 const router = express.Router();
 const { createSession: dbCreateSession, getSession: dbGetSession, getAllSessions, setApiKey, deleteSession: dbDeleteSession } = require('../db/database');
 const sessionManager = require('../services/sessionManager');
+const userAuth = require('../middleware/userAuth');
 const crypto = require('crypto');
 
-// List all sessions
+// Apply userAuth to all routes
+router.use(userAuth);
+
+// List all sessions for current user
 router.get('/', (req, res) => {
     try {
-        const sessions = getAllSessions();
+        const { userId } = req.user;
+        const sessions = getAllSessions(userId);
         const activeSessions = sessionManager.listSessions();
 
         // Merge database and active session data
@@ -29,23 +34,24 @@ router.get('/', (req, res) => {
     }
 });
 
-// Create new session
+// Create new session for current user
 router.post('/', async (req, res) => {
     try {
+        const { userId } = req.user;
         const { deviceId } = req.body;
 
         if (!deviceId) {
             return res.status(400).json({ success: false, error: 'deviceId is required' });
         }
 
-        // Check if session already exists
+        // Check if session already exists for this device (even for other users, deviceId must be unique globally for Baileys)
         const existing = dbGetSession(deviceId);
         if (existing) {
             return res.status(409).json({ success: false, error: 'Session already exists' });
         }
 
         // Create in database
-        dbCreateSession(deviceId);
+        dbCreateSession(deviceId, userId);
 
         // Initialize WhatsApp session
         await sessionManager.createSession(deviceId);
@@ -60,11 +66,12 @@ router.post('/', async (req, res) => {
     }
 });
 
-// Get session details
+// Get session details for current user
 router.get('/:deviceId', (req, res) => {
     try {
+        const { userId } = req.user;
         const { deviceId } = req.params;
-        const session = dbGetSession(deviceId);
+        const session = dbGetSession(deviceId, userId);
 
         if (!session) {
             return res.status(404).json({ success: false, error: 'Session not found' });
@@ -86,10 +93,17 @@ router.get('/:deviceId', (req, res) => {
     }
 });
 
-// Get QR code
+// Get QR code for current user session
 router.get('/:deviceId/qr', async (req, res) => {
     try {
+        const { userId } = req.user;
         const { deviceId } = req.params;
+
+        const session = dbGetSession(deviceId, userId);
+        if (!session) {
+            return res.status(404).json({ success: false, error: 'Session not found' });
+        }
+
         const qrData = await sessionManager.getQRCode(deviceId);
         res.json({ success: true, ...qrData });
     } catch (error) {
@@ -97,13 +111,14 @@ router.get('/:deviceId/qr', async (req, res) => {
     }
 });
 
-// Set/Update API key
+// Set/Update API key for current user session
 router.put('/:deviceId/api-key', (req, res) => {
     try {
+        const { userId } = req.user;
         const { deviceId } = req.params;
         let { apiKey } = req.body;
 
-        const session = dbGetSession(deviceId);
+        const session = dbGetSession(deviceId, userId);
         if (!session) {
             return res.status(404).json({ success: false, error: 'Session not found' });
         }
@@ -125,16 +140,22 @@ router.put('/:deviceId/api-key', (req, res) => {
     }
 });
 
-// Delete session
+// Delete current user session
 router.delete('/:deviceId', async (req, res) => {
     try {
+        const { userId } = req.user;
         const { deviceId } = req.params;
+
+        const session = dbGetSession(deviceId, userId);
+        if (!session) {
+            return res.status(404).json({ success: false, error: 'Session not found' });
+        }
 
         // Logout from WhatsApp
         await sessionManager.deleteSession(deviceId);
 
         // Delete from database
-        dbDeleteSession(deviceId);
+        dbDeleteSession(deviceId, userId);
 
         res.json({ success: true, message: 'Session deleted' });
     } catch (error) {
