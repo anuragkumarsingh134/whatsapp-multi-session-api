@@ -127,6 +127,33 @@ const sendMessage = async (deviceId, phone, message) => {
 };
 
 /**
+ * Send document via session
+ */
+const sendDocument = async (deviceId, phone, url, fileName, mimetype) => {
+    const session = activeSessions.get(deviceId);
+    if (!session) {
+        throw new Error('Session not found');
+    }
+
+    if (session.status !== 'connected') {
+        throw new Error('Session not connected');
+    }
+
+    let jid = phone;
+    if (!jid.includes('@s.whatsapp.net')) {
+        jid = `${phone}@s.whatsapp.net`;
+    }
+
+    await session.sock.sendMessage(jid, {
+        document: { url: url },
+        mimetype: mimetype || 'application/pdf',
+        fileName: fileName || 'document.pdf'
+    });
+
+    return { status: 'sent', to: jid, fileName };
+};
+
+/**
  * Logout and delete session
  */
 const deleteSession = async (deviceId) => {
@@ -180,6 +207,7 @@ module.exports = {
     getSession,
     getQRCode,
     sendMessage,
+    sendDocument,
     deleteSession,
     listSessions,
     initializeSessions

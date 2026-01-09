@@ -345,6 +345,39 @@
             </button>
         </div>
 
+        <div id="pdfSection" class="card hidden">
+            <h2>
+                <svg class="icon" viewBox="0 0 24 24">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                Send PDF Document
+            </h2>
+            <div class="form-group">
+                <label>Recipient Phone Number</label>
+                <input type="text" id="pdfPhoneInput" placeholder="e.g., 1234567890">
+            </div>
+            <div class="form-group">
+                <label>PDF URL</label>
+                <input type="text" id="pdfUrlInput" placeholder="https://example.com/document.pdf">
+            </div>
+            <div class="form-group">
+                <label>File Name (Optional)</label>
+                <input type="text" id="pdfFileNameInput" placeholder="my-invoice.pdf">
+            </div>
+            <button class="btn" onclick="sendPDF()">
+                <svg class="icon" style="width: 16px; height: 16px;" viewBox="0 0 24 24">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                Send PDF
+            </button>
+        </div>
+
         <div id="apiDocsSection" class="card hidden">
             <h2>
                 <svg class="icon" viewBox="0 0 24 24">
@@ -372,6 +405,10 @@
                 <div class="form-group">
                     <label>Python (Requests)</label>
                     <div class="api-key-display" id="pythonExample"></div>
+                </div>
+                <div class="form-group">
+                    <label>Send PDF (cURL)</label>
+                    <div class="api-key-display" id="curlFileExample"></div>
                 </div>
             </div>
         </div>
@@ -466,12 +503,14 @@
             if (currentSession.connectionState === 'connected') {
                 document.getElementById('apiKeySection').classList.remove('hidden');
                 document.getElementById('messageSection').classList.remove('hidden');
+                document.getElementById('pdfSection').classList.remove('hidden');
                 document.getElementById('apiDocsSection').classList.remove('hidden');
                 updateApiKeyDisplay();
                 updateApiDocs();
             } else {
                 document.getElementById('apiKeySection').classList.add('hidden');
                 document.getElementById('messageSection').classList.add('hidden');
+                document.getElementById('pdfSection').classList.add('hidden');
                 document.getElementById('apiDocsSection').classList.add('hidden');
             }
         }
@@ -515,6 +554,11 @@ payload = {
 
 response = requests.post(url, json=payload, headers=headers)
 print(response.json())`;
+
+            document.getElementById('curlFileExample').textContent = `curl -X POST ${baseUrl}/api/messages/send-file \\
+  -H "Authorization: Bearer ${key}" \\
+  -H "Content-Type: application/json" \\
+  -d '{"deviceId": "${device}", "number": "1234567890", "url": "https://example.com/doc.pdf", "fileName": "inivice.pdf"}'`;
         }
 
         async function loadQRCode() {
@@ -601,29 +645,70 @@ print(response.json())`;
             }
 
             if (!currentSession.hasApiKey) {
-                alert('Please set an API key first');
+                alert('Please set an API Key first');
                 return;
             }
-
-            const apiKey = prompt('Enter your API key to send message:');
-            if (!apiKey) return;
 
             try {
                 const res = await fetch('/api/messages/send', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`
+                        'Authorization': `Bearer ${currentSession.apiKey}`
                     },
-                    body: JSON.stringify({ deviceId, number: phone, message })
+                    body: JSON.stringify({
+                        deviceId: deviceId,
+                        number: phone,
+                        message: message
+                    })
                 });
 
                 const data = await res.json();
-
                 if (data.success) {
-                    alert('Message sent successfully!');
-                    document.getElementById('phoneInput').value = '';
+                    alert('Message sent!');
                     document.getElementById('messageInput').value = '';
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function sendPDF() {
+            const phone = document.getElementById('pdfPhoneInput').value.trim();
+            const url = document.getElementById('pdfUrlInput').value.trim();
+            const fileName = document.getElementById('pdfFileNameInput').value.trim();
+
+            if (!phone || !url) {
+                alert('Please enter phone number and PDF URL');
+                return;
+            }
+
+            if (!currentSession.hasApiKey) {
+                alert('Please set an API Key first');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/messages/send-file', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentSession.apiKey}`
+                    },
+                    body: JSON.stringify({
+                        deviceId: deviceId,
+                        number: phone,
+                        url: url,
+                        fileName: fileName || undefined
+                    })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    alert('PDF sent!');
+                    document.getElementById('pdfUrlInput').value = '';
                 } else {
                     alert('Error: ' + data.error);
                 }

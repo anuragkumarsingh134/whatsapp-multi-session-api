@@ -75,4 +75,31 @@ router.get('/send', async (req, res) => {
     }
 });
 
+// Send document (requires Bearer auth)
+router.post('/send-file', bearerAuth, async (req, res) => {
+    try {
+        const { deviceId } = req;
+        const { number, url, fileName, mimetype } = req.body;
+
+        if (!number || !url) {
+            return res.status(400).json({
+                success: false,
+                error: 'number and url are required'
+            });
+        }
+
+        const result = await sessionManager.sendDocument(deviceId, number, url, fileName, mimetype);
+
+        res.json({
+            success: true,
+            ...result
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
 module.exports = router;
