@@ -15,14 +15,12 @@ db.exec(`
 
     CREATE TABLE IF NOT EXISTS sessions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
         device_id TEXT UNIQUE NOT NULL,
         connection_state TEXT DEFAULT 'disconnected' CHECK(connection_state IN ('disconnected', 'waiting_qr', 'connected')),
         api_key TEXT,
         phone_number TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
     CREATE TABLE IF NOT EXISTS auth_state (
@@ -32,10 +30,6 @@ db.exec(`
         PRIMARY KEY (device_id, key_name),
         FOREIGN KEY (device_id) REFERENCES sessions(device_id) ON DELETE CASCADE
     );
-
-    CREATE INDEX IF NOT EXISTS idx_auth_state_device ON auth_state(device_id);
-    CREATE INDEX IF NOT EXISTS idx_sessions_state ON sessions(connection_state);
-    CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
 `);
 
 // Migration: Add user_id to sessions if it doesn't exist
@@ -44,6 +38,13 @@ try {
 } catch (e) {
     // Column already exists or other error
 }
+
+// Create indexes after migration
+db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_auth_state_device ON auth_state(device_id);
+    CREATE INDEX IF NOT EXISTS idx_sessions_state ON sessions(connection_state);
+    CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+`);
 
 // Helper functions
 const helpers = {
