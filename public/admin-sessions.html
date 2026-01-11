@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Sessions - Cloud Whatsapp Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --accent: #10b981;
+            --danger: #ef4444;
+            --border: #334155;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        .back-btn {
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .back-btn:hover {
+            color: var(--text-primary);
+        }
+
+        h1 {
+            font-size: 2rem;
+        }
+
+        .session-list {
+            display: grid;
+            gap: 16px;
+        }
+
+        .session-card {
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .session-info {
+            display: grid;
+            gap: 4px;
+        }
+
+        .session-id {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+
+        .session-meta {
+            display: flex;
+            gap: 16px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-connected {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .status-disconnected {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .no-sessions {
+            text-align: center;
+            padding: 60px;
+            color: var(--text-secondary);
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <a href="/admin" class="back-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7" />
+                    </svg>
+                    Back to Dashboard
+                </a>
+                <h1 style="margin-top: 10px;">Sessions: <span id="usernameDisplay">Loading...</span></h1>
+            </div>
+        </div>
+
+        <div id="sessionsList" class="session-list">
+            <!-- Populated by JS -->
+            <div class="no-sessions">Loading...</div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('wa_api_token');
+        const user = JSON.parse(localStorage.getItem('wa_api_user') || '{}');
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetUserId = urlParams.get('userId');
+        const targetUsername = urlParams.get('username');
+
+        if (!token || user.role !== 'admin') window.location.href = '/login';
+        if (!targetUserId) window.location.href = '/admin';
+
+        document.getElementById('usernameDisplay').textContent = targetUsername || 'User';
+
+        async function loadSessions() {
+            try {
+                const res = await fetch(`/api/admin/users/${targetUserId}/sessions`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+
+                const list = document.getElementById('sessionsList');
+
+                if (!data.success || data.sessions.length === 0) {
+                    list.innerHTML = '<div class="no-sessions">No active sessions found for this user.</div>';
+                    return;
+                }
+
+                list.innerHTML = data.sessions.map(s => `
+                    <div class="session-card">
+                        <div class="session-info">
+                            <div class="session-id">${s.device_id}</div>
+                            <div class="session-meta">
+                                <div>Phone: ${s.phone_number || 'N/A'}</div>
+                                <div>Created: ${new Date(s.created_at).toLocaleDateString()}</div>
+                            </div>
+                        </div>
+                        <div class="status-badge ${s.connection_state === 'connected' ? 'status-connected' : 'status-disconnected'}">
+                            ${s.connection_state}
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (err) {
+                document.getElementById('sessionsList').innerHTML = '<div class="no-sessions" style="color:var(--danger)">Error loading sessions</div>';
+            }
+        }
+
+        loadSessions();
+    </script>
+</body>
+
+</html>

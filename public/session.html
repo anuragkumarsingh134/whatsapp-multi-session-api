@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Session Detail</title>
+    <title>Session Detail - Cloud Whatsapp</title>
     <style>
         * {
             margin: 0;
@@ -261,6 +261,97 @@
                 transform: translateY(0);
             }
         }
+
+        /* Modal & Form Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1e293b;
+            padding: 30px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 500px;
+            border: 1px solid #334155;
+            color: #f1f5f9;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .btn-close {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #cbd5e1;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: white;
+            transition: 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #10b981;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .btn-save {
+            width: 100%;
+            padding: 12px;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .btn-save:hover {
+            background: #059669;
+        }
     </style>
 </head>
 
@@ -287,6 +378,9 @@
             </div>
             <div id="userProfile" style="display: flex; align-items: center; gap: 15px;">
                 <span id="usernameDisplay" style="color: #cbd5e1; font-weight: 600;"></span>
+                <button class="btn btn-secondary"
+                    style="padding: 8px 16px; font-size: 13px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid #10b981;"
+                    onclick="openProfile()">Profile</button>
                 <button class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px;"
                     onclick="logout()">Logout</button>
             </div>
@@ -430,6 +524,38 @@
                     </button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profileModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Edit Profile</h2>
+                <button class="btn-close" onclick="closeProfile()">&times;</button>
+            </div>
+            <form id="profileForm" onsubmit="updateProfile(event)">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="p_username" required>
+                </div>
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="p_name" placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="p_email" placeholder="john@example.com">
+                </div>
+                <div class="form-group">
+                    <label>New Password (leave blank to keep current)</label>
+                    <input type="password" id="p_password" placeholder="Min 6 characters">
+                </div>
+                <button type="submit" class="btn-save">Save Changes</button>
+                <p id="profileMsg" style="margin-top:10px; text-align:center; font-size:0.9rem;"></p>
+            </form>
         </div>
     </div>
 
@@ -708,6 +834,73 @@
             };
             return states[state] || state;
         }
+
+        // Profile Functions
+        function openProfile() {
+            const user = JSON.parse(localStorage.getItem('wa_api_user') || '{}');
+            document.getElementById('p_username').value = user.username || '';
+            document.getElementById('p_name').value = user.name || '';
+            document.getElementById('p_email').value = user.email || '';
+            document.getElementById('p_password').value = '';
+            document.getElementById('profileMsg').textContent = '';
+            document.getElementById('profileModal').classList.add('active');
+        }
+
+        function closeProfile() {
+            document.getElementById('profileModal').classList.remove('active');
+        }
+
+        async function updateProfile(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const msg = document.getElementById('profileMsg');
+
+            const username = document.getElementById('p_username').value;
+            const name = document.getElementById('p_name').value;
+            const email = document.getElementById('p_email').value;
+            const password = document.getElementById('p_password').value;
+
+            btn.disabled = true;
+            btn.innerText = 'Saving...';
+            msg.textContent = '';
+
+            try {
+                const body = { username, name, email };
+                if (password) body.password = password;
+
+                const res = await fetch('/api/auth/update-profile', {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    msg.style.color = '#10b981';
+                    msg.textContent = 'Profile updated successfully!';
+
+                    // Update local storage
+                    localStorage.setItem('wa_api_user', JSON.stringify({ ...data.user }));
+                    // Update header display if name changed
+                    document.getElementById('usernameDisplay').textContent = data.user.name || data.user.username;
+
+                    setTimeout(closeProfile, 1500);
+                } else {
+                    msg.style.color = '#ef4444';
+                    msg.textContent = data.error;
+                }
+            } catch (err) {
+                msg.style.color = '#ef4444';
+                msg.textContent = 'Error updating profile';
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Save Changes';
+            }
+        }
+
 
         loadSession();
         setInterval(loadSession, 3000);

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - WhatsApp API</title>
+    <title>Login - Cloud Whatsapp</title>
     <style>
         * {
             margin: 0;
@@ -200,7 +200,12 @@
                 if (data.success) {
                     localStorage.setItem('wa_api_token', data.token);
                     localStorage.setItem('wa_api_user', JSON.stringify(data.user));
-                    window.location.href = '/';
+
+                    if (data.user.role === 'admin') {
+                        window.location.href = '/admin';
+                    } else {
+                        window.location.href = '/';
+                    }
                 } else {
                     errorDiv.textContent = data.error;
                     errorDiv.style.display = 'block';

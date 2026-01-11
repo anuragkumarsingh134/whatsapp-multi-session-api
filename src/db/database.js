@@ -9,7 +9,11 @@ db.exec(`
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE NOT NULL,
+        name TEXT,
+        email TEXT,
         password TEXT NOT NULL,
+        role TEXT DEFAULT 'client',
+        is_verified INTEGER DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -39,6 +43,35 @@ try {
     // Column already exists or other error
 }
 
+// Migration: Add role and is_verified to users if they don't exist
+try {
+    db.exec("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'client'");
+    db.exec("ALTER TABLE users ADD COLUMN is_verified INTEGER DEFAULT 1");
+} catch (e) {
+    // Columns already exist
+}
+
+// Migration: Add name and email to users if they don't exist
+try {
+    db.exec("ALTER TABLE users ADD COLUMN name TEXT");
+    db.exec("ALTER TABLE users ADD COLUMN email TEXT");
+} catch (e) {
+    // Columns already exist
+}
+
+// Seed default admin if not exists
+const bcrypt = require('bcryptjs');
+try {
+    const adminCheck = db.prepare("SELECT * FROM users WHERE role = 'admin'").get();
+    if (!adminCheck) {
+        const hashedPassword = bcrypt.hashSync('admin123', 10);
+        db.prepare("INSERT INTO users (username, password, role, is_verified) VALUES (?, ?, ?, ?)").run('admin', hashedPassword, 'admin', 1);
+        console.log('Default admin account created: admin / admin123');
+    }
+} catch (error) {
+    console.error('Error seeding admin:', error);
+}
+
 // Create indexes after migration
 db.exec(`
     CREATE INDEX IF NOT EXISTS idx_auth_state_device ON auth_state(device_id);
@@ -49,8 +82,8 @@ db.exec(`
 // Helper functions
 const helpers = {
     // User functions
-    createUser: (username, hPassword) => {
-        return db.prepare('INSERT INTO users (username, password) VALUES (?, ?)').run(username, hPassword);
+    createUser: (username, hPassword, role = 'client', isVerified = 0) => {
+        return db.prepare('INSERT INTO users (username, password, role, is_verified) VALUES (?, ?, ?, ?)').run(username, hPassword, role, isVerified);
     },
 
     getUserByUsername: (username) => {
@@ -59,6 +92,23 @@ const helpers = {
 
     getUserById: (id) => {
         return db.prepare('SELECT * FROM users WHERE id = ?').get(id);
+    },
+
+    updateUser: (id, updates) => {
+        const fields = [];
+        const values = [];
+
+        if (updates.name !== undefined) { fields.push('name = ?'); values.push(updates.name); }
+        if (updates.email !== undefined) { fields.push('email = ?'); values.push(updates.email); }
+        if (updates.username !== undefined) { fields.push('username = ?'); values.push(updates.username); }
+        if (updates.password !== undefined) { fields.push('password = ?'); values.push(updates.password); }
+
+        if (fields.length === 0) return { changes: 0 };
+
+        values.push(id);
+        const setClause = fields.join(', ');
+
+        return db.prepare(`UPDATE users SET ${setClause} WHERE id = ?`).run(...values);
     },
 
     // Session functions
