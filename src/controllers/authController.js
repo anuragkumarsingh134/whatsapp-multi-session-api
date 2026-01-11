@@ -20,10 +20,19 @@ const authController = {
             }
 
             const hashedPassword = await bcrypt.hash(password, 10);
-            // Default: role=client, isVerified=0 (requires admin approval)
-            createUser(username, hashedPassword, 'client', 0);
 
-            res.json({ success: true, message: 'Account created. Please wait for admin verification.' });
+            // Check if this is the first user
+            const allUsers = getAllUsers();
+
+            if (allUsers.length === 0) {
+                // First user becomes admin and is auto-verified
+                createUser(username, hashedPassword, 'admin', 1);
+                res.json({ success: true, message: 'Admin account created successfully. You can now log in.' });
+            } else {
+                // Subsequent users are clients and require verification
+                createUser(username, hashedPassword, 'client', 0);
+                res.json({ success: true, message: 'Account created. Please wait for admin verification.' });
+            }
         } catch (error) {
             res.status(500).json({ success: false, error: error.message });
         }

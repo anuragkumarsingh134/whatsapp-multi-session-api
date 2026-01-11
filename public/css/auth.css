@@ -137,3 +137,29 @@ p.subtitle {
     border: 1px solid rgba(239, 68, 68, 0.2);
     display: none;
 }
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+    .auth-card {
+        padding: 30px 20px;
+    }
+
+    h1 {
+        font-size: 20px;
+    }
+
+    .logo svg {
+        width: 40px;
+        height: 40px;
+    }
+
+    .form-group input {
+        padding: 10px 14px;
+        font-size: 14px;
+    }
+
+    .btn {
+        padding: 12px;
+        font-size: 15px;
+    }
+}

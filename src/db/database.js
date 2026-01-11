@@ -84,6 +84,10 @@ const helpers = {
         return db.prepare('SELECT * FROM users WHERE id = ?').get(id);
     },
 
+    getAllUsers: () => {
+        return db.prepare('SELECT * FROM users').all();
+    },
+
     updateUser: (id, updates) => {
         const fields = [];
         const values = [];
