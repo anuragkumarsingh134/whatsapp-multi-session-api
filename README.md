@@ -194,10 +194,64 @@ journalctl -u cloudflared -f
 
 ### Option 3: VPS or Docker
 
-**Best for:** Traditional hosting | **Cost:** Varies ($5-20/month)
+**Best for:** Traditional hosting | **Cost:** $5-20/month
 
 <details>
-<parameter name="summary">Click to expand VPS/Docker deployment
+<summary>Click to expand VPS/Docker deployment</summary>
+
+#### VPS with PM2
+
+```bash
+# Install Node.js
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+apt install -y nodejs git build-essential
+
+# Clone & setup
+git clone https://github.com/anuragkumarsingh134/whatsapp-multi-session-api.git
+cd whatsapp-multi-session-api
+npm install --production
+
+# Create .env
+nano .env  # Add your configuration
+
+# Start with PM2
+npm install -g pm2
+pm2 start src/server.js --name whatsapp-api
+pm2 save && pm2 startup
+```
+
+#### Docker
+
+```bash
+# Clone repo
+git clone https://github.com/anuragkumarsingh134/whatsapp-multi-session-api.git
+cd whatsapp-multi-session-api
+
+# Start container
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+```
+
+#### Update
+
+```bash
+# PM2
+git pull && npm install --production
+pm2 restart whatsapp-api
+
+# Docker  
+git pull
+docker-compose up -d --build
+```
+
+</details>
+
+---
+
+## ⚙️ Configuration
+
 See `.env.example` for all options. Generate secure secrets:
 
 ```bash
