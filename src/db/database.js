@@ -59,18 +59,8 @@ try {
     // Columns already exist
 }
 
-// Seed default admin if not exists
-const bcrypt = require('bcryptjs');
-try {
-    const adminCheck = db.prepare("SELECT * FROM users WHERE role = 'admin'").get();
-    if (!adminCheck) {
-        const hashedPassword = bcrypt.hashSync('admin123', 10);
-        db.prepare("INSERT INTO users (username, password, role, is_verified) VALUES (?, ?, ?, ?)").run('admin', hashedPassword, 'admin', 1);
-        console.log('Default admin account created: admin / admin123');
-    }
-} catch (error) {
-    console.error('Error seeding admin:', error);
-}
+
+// No longer needed - first user signup becomes admin automatically
 
 // Create indexes after migration
 db.exec(`
