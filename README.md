@@ -1,141 +1,229 @@
-# WhatsApp Multi-Session API
+# Cloud WhatsApp API
 
-![Version](https://img.shields.io/badge/version-1.6.3-blue)
-![Node](https://img.shields.io/badge/node-%3E%3D14.0.0-green)
-![License](https://img.shields.io/badge/license-MIT-green)
+Multi-session WhatsApp API service with modern UI. Manage multiple WhatsApp connections via REST API.
 
-A production-ready WhatsApp API with multi-session support, built with Node.js and Baileys. Manage multiple WhatsApp numbers, send messages/files, and control sessions via a modern web interface or REST API.
+[![Version](https://img.shields.io/badge/version-1.8.0-blue)](https://github.com/anuragkumarsingh134/whatsapp-multi-session-api)
+[![Node](https://img.shields.io/badge/node-%3E%3D18-green)](https://nodejs.org)
+[![License](https://img.shields.io/badge/license-ISC-green)](LICENSE)
 
 ## ✨ Features
 
-- **🔄 Multi-Session**: Manage specific, isolated WhatsApp sessions for different numbers.
-- **🖥️ Modern Dashboard**: Clean, two-column UI to manage connections, view status, and test APIs.
-- **📄 Send Files/PDFs**: Native support for sending documents via URL (POST & GET).
-- **📝 REST API**: Full programmatic control for messages, sessions, and groups.
-- **🔐 Secure**: Bearer Token (API Key) authentication for all endpoints.
-- **📱 QR Authentication**: Real-time, auto-refreshing QR codes for easy linking.
+- 🔐 User authentication with admin panel
+- 📱 Multiple WhatsApp sessions per user
+- 🔑 Per-session API key authentication
+- 📨 Send text, images, and documents
+- 🎨 Modern responsive dark UI
+- 📖 Built-in API documentation
+- 🔄 Auto-reconnect & session persistence
+- 📊 Real-time connection status
 
 ## 🚀 Quick Start
 
-### Local Setup
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/anuragkumarsingh134/whatsapp-multi-session-api.git
-   cd whatsapp-multi-session-api
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Start the server**
-   ```bash
-   npm start
-   ```
-   Access the dashboard at `http://localhost:3000`.
-
-### Docker Setup
-
 ```bash
-docker-compose up -d
-```
+# Clone repository
+git clone https://github.com/anuragkumarsingh134/whatsapp-multi-session-api.git
+cd whatsapp-multi-session-api
 
-## 📖 Usage Guide
-
-### 1. Connect a Device
-- Go to `http://localhost:3000`.
-- Click **"Create New Session"**.
-- Enter a unique **Device ID** (e.g., `marketing-phone`).
-- Scan the QR code with WhatsApp (Linked Devices).
-
-### 2. Get Your API Key
-- On the session detail page (`/sessions/marketing-phone`), look for the **API Key Management** card.
-- Click **"Set/Update API Key"** to generate a secure 32-char key.
-- Save this key! You'll need it for all API requests.
-
-### 3. Send a Message
-
-**Method A: Simple GET Request (Browser/Zapier)**
-```
-http://localhost:3000/api/messages/send?deviceId=marketing-phone&number=1234567890&message=Hello&apiKey=YOUR_KEY
-```
-
-**Method B: POST Request (Code/cURL)**
-```bash
-curl -X POST http://localhost:3000/api/messages/send \
-  -H "Authorization: Bearer YOUR_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "deviceId": "marketing-phone",
-    "number": "1234567890",
-    "message": "Hello from API!"
-  }'
-```
-
-### 4. Send a PDF/File
-
-**GET Request:**
-```
-http://localhost:3000/api/messages/send-file?deviceId=marketing-phone&number=1234567890&type=document&url=https://example.com/invoice.pdf&caption=Here%20is%20your%20invoice&apiKey=YOUR_KEY
-```
-
-**POST Request:**
-```json
-POST /api/messages/send
-{
-  "deviceId": "marketing-phone",
-  "number": "1234567890",
-  "type": "document",
-  "url": "https://example.com/invoice.pdf",
-  "caption": "Your Invoice"
-}
-```
-
-## 🔌 API Reference
-> Full documentation available at `http://localhost:3000/docs`
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/sessions` | List all active sessions |
-| `POST` | `/api/sessions` | Create/Start a new session |
-| `DELETE` | `/api/sessions/:id` | Logout and delete session |
-| `GET` | `/api/sessions/:id/qr` | Get raw QR code data |
-| `POST` | `/api/messages/send` | Send text or media (JSON) |
-| `GET` | `/api/messages/send` | Send text (Query Param) |
-| `GET` | `/api/messages/send-file` | Send file (Query Param) |
-
-## 🔄 How to Update
-
-To update your installation to the latest version:
-
-### Standard/PM2
-```bash
-# 1. Stop the service
-pm2 stop whatsapp-api
-
-# 2. Get latest code
-git pull origin main
-
-# 3. Update dependencies
+# Install dependencies
 npm install
 
-# 4. Restart
-pm2 restart whatsapp-api
+# Start server
+npm start
 ```
 
-### Docker
+Open `http://localhost:3000` and create your account. **First user automatically becomes admin!**
+
+## 📖 Basic Usage
+
+### 1. Create Session
+- Click "Create New Session"
+- Enter unique device ID
+- Scan QR code with WhatsApp
+
+### 2. Send Message
+
 ```bash
-# 1. Get latest code
-git pull origin main
-
-# 2. Rebuild and restart
-docker-compose up -d --build
+curl -X POST http://localhost:3000/api/sessions/{deviceId}/send-message \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"number": "1234567890", "message": "Hello!"}'
 ```
 
-## 🔧 Deployment
-See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed VPS and production configuration.
+### 3. Send Image
+
+```bash
+curl -X POST http://localhost:3000/api/sessions/{deviceId}/send-image \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -F "number=1234567890" \
+  -F "caption=Check this out" \
+  -F "image=@photo.jpg"
+```
+
+Full API docs at `/session/{deviceId}/docs` after login.
 
 ---
+
+## 🌐 Production Deployment
+
+### Option 1: Render.com (Easiest)
+
+**Best for:** Quick cloud deployment | **Cost:** $7/month
+
+<details>
+<summary>Click to expand Render.com deployment</summary>
+
+#### Setup (15 minutes)
+
+1. **Create Account**
+   - Go to [render.com](https://render.com)
+   - Sign up with GitHub
+
+2. **Deploy**
+   - New → Web Service
+   - Connect your repo
+   - Configure:
+     - **Build:** `npm install`
+     - **Start:** `npm start`
+     - **Instance:** Starter ($7/mo)
+
+3. **Environment Variables**
+   ```
+   PORT=3000
+   NODE_ENV=production
+   DB_PATH=/data/whatsapp.db
+   JWT_SECRET=[32+ random characters]
+   SESSION_SECRET=[32+ random characters]
+   CORS_ORIGIN=https://your-app.onrender.com
+   ```
+
+4. **Add Disk** (Critical!)
+   - Name: `data`
+   - Mount: `/data`
+   - Size: 1 GB
+
+5. **Deploy** → Your app is live at `https://your-app.onrender.com` 🎉
+
+**Auto-deploys on every git push!**
+
+</details>
+
+### Option 2: Proxmox + Cloudflare (Free)
+
+**Best for:** Self-hosting | **Cost:** $0/month
+
+<details>
+<summary>Click to expand Proxmox deployment</summary>
+
+#### Prerequisites
+- Proxmox with Ubuntu container
+- Domain with Cloudflare account
+
+#### Deployment (20 minutes)
+
+**1. Prepare Container**
+```bash
+pct enter <container-id>
+apt update && apt upgrade -y
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+apt install -y nodejs git
+npm install -g pm2
+```
+
+**2. Deploy App**
+```bash
+cd /opt
+git clone https://github.com/anuragkumarsingh134/whatsapp-multi-session-api.git whatsapp-api
+cd whatsapp-api
+npm install --production
+
+# Create .env (see .env.example)
+nano .env
+
+mkdir -p data logs backups
+pm2 start src/server.js --name whatsapp-api
+pm2 save && pm2 startup
+```
+
+**3. Cloudflare Tunnel**
+```bash
+# Install
+wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+dpkg -i cloudflared-linux-amd64.deb
+
+# Setup
+cloudflared tunnel login
+cloudflared tunnel create whatsapp-api
+
+# Configure (~/.cloudflared/config.yml)
+tunnel: YOUR-TUNNEL-ID
+credentials-file: /root/.cloudflared/YOUR-TUNNEL-ID.json
+ingress:
+  - hostname: api.yourdomain.com
+    service: http://localhost:3000
+  - service: http_status:404
+
+# Start
+cloudflared tunnel route dns whatsapp-api api.yourdomain.com
+cloudflared service install
+systemctl enable --now cloudflared
+```
+
+**4. Secure**
+```bash
+apt install -y ufw fail2ban
+ufw allow 22/tcp
+ufw allow from 127.0.0.1 to any port 3000
+ufw enable
+```
+
+✅ **Done!** Visit `https://api.yourdomain.com`
+
+**Maintenance:**
+```bash
+# Update app
+cd /opt/whatsapp-api
+git pull && npm install --production
+pm2 restart whatsapp-api
+
+# Logs
+pm2 logs whatsapp-api
+journalctl -u cloudflared -f
+```
+
+</details>
+
+---
+
+## ⚙️ Configuration
+
+See `.env.example` for all options. Generate secure secrets:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+## 👥 User Roles
+
+- **Admin** - First signup, manages all users/sessions
+- **Client** - Regular users, manage own sessions
+
+## 🛠️ Tech Stack
+
+- Node.js + Express
+- SQLite (better-sqlite3)
+- Baileys (WhatsApp library)
+- JWT authentication
+- PM2 (production)
+
+## 📄 License
+
+ISC License - see [LICENSE](LICENSE)
+
+## 🆘 Support
+
+- [Issues](https://github.com/anuragkumarsingh134/whatsapp-multi-session-api/issues)
+- [Discussions](https://github.com/anuragkumarsingh134/whatsapp-multi-session-api/discussions)
+
+---
+
 **Made with ❤️ by [Anurag Kumar Singh](https://github.com/anuragkumarsingh134)**
