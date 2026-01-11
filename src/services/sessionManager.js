@@ -42,19 +42,31 @@ const createSession = async (deviceId) => {
         }
 
         if (connection === 'close') {
-            const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
-            console.log(`[${deviceId}] Connection closed, reconnecting: ${shouldReconnect}`);
+            const statusCode = lastDisconnect?.error?.output?.statusCode;
+            const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+            const wasWaitingForQR = sessionData.status === 'waiting_qr';
+            const isRestart = statusCode === DisconnectReason.restartRequired;
 
-            sessionData.status = 'disconnected';
-            sessionData.qrCode = null;
-            updateSessionState(deviceId, 'disconnected');
+            // Block reconnect ONLY if waiting for QR and NOT a restart
+            const blockReconnect = wasWaitingForQR && !isRestart;
 
-            if (shouldReconnect) {
-                // Remove from map before reconnecting to avoid "already exists" error
+            console.log(`[${deviceId}] Connection closed (Status: ${statusCode}). Reconnecting: ${shouldReconnect && !blockReconnect}`);
+
+            if (blockReconnect) {
+                // Stop strategy
+                sessionData.status = 'disconnected';
+                sessionData.qrCode = null;
+                updateSessionState(deviceId, 'disconnected');
                 activeSessions.delete(deviceId);
-                // Reconnect after delay
-                setTimeout(() => createSession(deviceId), 3000);
+            } else if (shouldReconnect) {
+                // Reconnect strategy
+                activeSessions.delete(deviceId);
+                setTimeout(() => createSession(deviceId), isRestart ? 100 : 3000);
             } else {
+                // Logout strategy
+                sessionData.status = 'disconnected';
+                sessionData.qrCode = null;
+                updateSessionState(deviceId, 'disconnected');
                 activeSessions.delete(deviceId);
             }
         } else if (connection === 'open') {
@@ -102,6 +114,35 @@ const getQRCode = async (deviceId) => {
 
     const qrImage = await QRCode.toDataURL(session.qrCode);
     return { qrCode: session.qrCode, qrImage };
+};
+
+/**
+ * Get profile picture for connected session
+ */
+const getProfilePicture = async (deviceId) => {
+    const session = activeSessions.get(deviceId);
+    if (!session) {
+        throw new Error('Session not found');
+    }
+
+    if (session.status !== 'connected') {
+        throw new Error('Session not connected');
+    }
+
+    try {
+        // Get the user's own JID (WhatsApp ID)
+        const userJid = session.sock.user?.id;
+        if (!userJid) {
+            return { profilePicUrl: null };
+        }
+
+        // Fetch profile picture URL
+        const profilePicUrl = await session.sock.profilePictureUrl(userJid, 'image');
+        return { profilePicUrl };
+    } catch (error) {
+        console.log(`[${deviceId}] No profile picture available:`, error.message);
+        return { profilePicUrl: null };
+    }
 };
 
 /**
@@ -194,6 +235,15 @@ const initializeSessions = async () => {
 
     for (const session of sessions) {
         try {
+            if (session.connection_state !== 'connected') {
+                console.log(`Skipping restoration for session ${session.device_id} (State: ${session.connection_state})`);
+                // Reset stale waiting_qr state to disconnected so user can regenerate
+                if (session.connection_state === 'waiting_qr') {
+                    updateSessionState(session.device_id, 'disconnected');
+                }
+                continue;
+            }
+
             console.log(`Restoring session: ${session.device_id}`);
             await createSession(session.device_id);
         } catch (error) {
@@ -206,6 +256,7 @@ module.exports = {
     createSession,
     getSession,
     getQRCode,
+    getProfilePicture,
     sendMessage,
     sendDocument,
     deleteSession,

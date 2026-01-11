@@ -5,503 +5,239 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>API Documentation - Cloud Whatsapp</title>
-    <style>
-        :root {
-            --bg-dark: #0a0e27;
-            --card-bg: #1e293b;
-            --primary: #10b981;
-            --text-main: #ffffff;
-            --text-dim: #94a3b8;
-            --border: #334155;
-            --accent: #3b82f6;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: var(--bg-dark);
-            color: var(--text-main);
-            line-height: 1.6;
-        }
-
-        .layout {
-            display: grid;
-            grid-template-columns: 280px 1fr;
-            min-height: 100vh;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            background: #0f172a;
-            border-right: 1px solid var(--border);
-            padding: 40px 24px;
-            position: sticky;
-            top: 0;
-            height: 100vh;
-        }
-
-        .sidebar h2 {
-            font-size: 1.2rem;
-            margin-bottom: 30px;
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .nav-list {
-            list-style: none;
-        }
-
-        .nav-item {
-            margin-bottom: 12px;
-        }
-
-        .nav-link {
-            text-decoration: none;
-            color: var(--text-dim);
-            font-size: 15px;
-            transition: color 0.3s;
-            display: block;
-            padding: 8px 12px;
-            border-radius: 8px;
-        }
-
-        .nav-link:hover {
-            color: var(--text-main);
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .nav-link.active {
-            color: var(--primary);
-            background: rgba(16, 185, 129, 0.1);
-            font-weight: 600;
-        }
-
-        /* Content */
-        .content {
-            padding: 60px 80px;
-            max-width: 1000px;
-        }
-
-        .header {
-            margin-bottom: 60px;
-        }
-
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 15px;
-        }
-
-        .header p {
-            color: var(--text-dim);
-            font-size: 1.1rem;
-        }
-
-        section {
-            margin-bottom: 80px;
-            scroll-margin-top: 40px;
-        }
-
-        section h3 {
-            font-size: 1.8rem;
-            margin-bottom: 25px;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 10px;
-        }
-
-        .doc-card {
-            background: var(--card-bg);
-            border-radius: 16px;
-            border: 1px solid var(--border);
-            padding: 24px;
-            margin-bottom: 30px;
-        }
-
-        .endpoint {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 15px;
-        }
-
-        .method {
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-weight: 700;
-            font-size: 12px;
-            text-transform: uppercase;
-        }
-
-        .method.post {
-            background: rgba(16, 185, 129, 0.2);
-            color: #10b981;
-        }
-
-        .method.get {
-            background: rgba(59, 130, 246, 0.2);
-            color: #3b82f6;
-        }
-
-        .url {
-            font-family: 'Courier New', Courier, monospace;
-            color: #cbd5e1;
-            font-size: 14px;
-        }
-
-        .param-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-        }
-
-        .param-table th,
-        .param-table td {
-            text-align: left;
-            padding: 12px;
-            border-bottom: 1px solid var(--border);
-            font-size: 14px;
-        }
-
-        .param-table th {
-            color: var(--text-dim);
-            font-weight: 600;
-        }
-
-        .code-block {
-            background: #0f172a;
-            padding: 20px;
-            border-radius: 12px;
-            position: relative;
-            margin-top: 20px;
-        }
-
-        pre {
-            font-family: 'Fira Code', 'Courier New', monospace;
-            font-size: 13px;
-            color: #e2e8f0;
-            white-space: pre-wrap;
-            word-break: break-all;
-        }
-
-        .copy-btn {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            color: var(--text-dim);
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-        .back-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--text-dim);
-            text-decoration: none;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-
-        .back-btn:hover {
-            color: var(--text-main);
-        }
-
-        .icon {
-            width: 18px;
-            height: 18px;
-            fill: currentColor;
-        }
-
-        @media (max-width: 900px) {
-            .layout {
-                grid-template-columns: 1fr;
-            }
-
-            .sidebar {
-                display: none;
-            }
-
-            .content {
-                padding: 40px 20px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="/css/docs.css">
 </head>
 
 <body>
-    <div class="layout">
-        <aside class="sidebar">
-            <h2>
-                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                </svg>
-                Cloud Whatsapp Docs
-            </h2>
-            <ul class="nav-list">
-                <li class="nav-item"><a href="#intro" class="nav-link active">Introduction</a></li>
-                <li class="nav-item"><a href="#auth" class="nav-link">Authentication</a></li>
-                <li class="nav-item"><a href="#text" class="nav-link">Sending Text</a></li>
-                <li class="nav-item"><a href="#docs" class="nav-link">Sending Documents</a></li>
-            </ul>
-        </aside>
-
-        <main class="content">
-            <a href="/" class="back-btn" id="backLink">
-                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <!-- Fixed Header -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="/" class="back-link" id="backLink" title="Back to Session">
+                <svg class="icon" viewBox="0 0 24 24">
                     <line x1="19" y1="12" x2="5" y2="12"></line>
                     <polyline points="12 19 5 12 12 5"></polyline>
                 </svg>
-                Back to Session
             </a>
+            <div class="header-brand">
+                <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <h1>API Documentation</h1>
+            </div>
+        </div>
+        <div class="header-right">
+            <span class="device-badge">
+                <strong id="deviceDisplayName">...</strong>
+            </span>
+        </div>
+    </header>
 
-            <div class="header">
-                <h1>API Reference</h1>
-                <p>Learn how to integrate the Cloud Whatsapp API into your application using these live examples
-                    for device: <strong id="deviceDisplayName" style="color: var(--primary);">...</strong></p>
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <nav class="nav-list">
+            <a href="#intro" class="nav-link active">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                Introduction
+            </a>
+            <a href="#auth" class="nav-link">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                Authentication
+            </a>
+            <a href="#text" class="nav-link">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                Sending Text
+            </a>
+            <a href="#docs" class="nav-link">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+                Sending Documents
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+        <div class="intro-section">
+            <h2>API Reference</h2>
+            <p class="subtitle">Learn how to integrate the Cloud Whatsapp API into your application with these live
+                examples</p>
+        </div>
+
+        <section id="intro" class="doc-section">
+            <h3>Introduction</h3>
+            <p>The Cloud Whatsapp API allows you to programmatically send messages via authenticated WhatsApp sessions.
+                All endpoints require an API Key specifically generated for your device.</p>
+        </section>
+
+        <section id="auth" class="doc-section">
+            <h3>Authentication</h3>
+            <p>Pass your API Key in the <code>Authorization</code> header as a Bearer token.</p>
+            <div class="code-block">
+                <pre>Authorization: Bearer <span id="authKeyLabel" class="highlight">YOUR_API_KEY</span></pre>
+            </div>
+        </section>
+
+        <section id="text" class="doc-section">
+            <h3>Sending Text Messages</h3>
+            <p>Send plain text messages to any WhatsApp number.</p>
+
+            <div class="doc-card">
+                <div class="endpoint">
+                    <span class="method post">POST</span>
+                    <span class="url">/api/messages/send</span>
+                </div>
+                <table class="param-table">
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td><code>deviceId</code></td>
+                        <td><span class="type-badge">string</span></td>
+                        <td>The unique ID of the session</td>
+                    </tr>
+                    <tr>
+                        <td><code>number</code></td>
+                        <td><span class="type-badge">string</span></td>
+                        <td>Recipient phone number (with country code)</td>
+                    </tr>
+                    <tr>
+                        <td><code>message</code></td>
+                        <td><span class="type-badge">string</span></td>
+                        <td>The text message content</td>
+                    </tr>
+                </table>
+                <div class="code-block">
+                    <button class="copy-btn" onclick="copyToClipboard('curlTextExample')">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        Copy cURL
+                    </button>
+                    <pre id="curlTextExample"></pre>
+                </div>
             </div>
 
-            <section id="intro">
-                <h3>Introduction</h3>
-                <p>The Cloud Whatsapp API allows you to programmatically send messages via authenticated WhatsApp
-                    sessions. All
-                    endpoints require an API Key specifically generated for your device.</p>
-            </section>
-
-            <section id="auth">
-                <h3>Authentication</h3>
-                <p>Pass your API Key in the `Authorization` header as a Bearer token.</p>
+            <div class="doc-card">
+                <div class="endpoint">
+                    <span class="method get">GET</span>
+                    <span class="url">/api/messages/send</span>
+                </div>
+                <p class="note">You can also send messages using a simple HTTP GET request.</p>
                 <div class="code-block">
-                    <pre>Authorization: Bearer <span id="authKeyLabel">YOUR_API_KEY</span></pre>
+                    <button class="copy-btn" onclick="copyToClipboard('getUrlTextExample')">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        Copy URL
+                    </button>
+                    <pre id="getUrlTextExample"></pre>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <section id="text">
-                <h3>Sending Text Messages</h3>
-                <p>Send plain text messages to any WhatsApp number.</p>
+        <section id="docs" class="doc-section">
+            <h3>Sending PDF / Documents</h3>
+            <p>Send PDFs, images, or any other documents by providing a public URL.</p>
 
-                <div class="doc-card">
-                    <div class="endpoint">
-                        <span class="method post">POST</span>
-                        <span class="url">/api/messages/send</span>
-                    </div>
-                    <table class="param-table">
-                        <tr>
-                            <th>Parameter</th>
-                            <th>Type</th>
-                            <th>Description</th>
-                        </tr>
-                        <tr>
-                            <td>deviceId</td>
-                            <td>string</td>
-                            <td>The unique ID of the session</td>
-                        </tr>
-                        <tr>
-                            <td>number</td>
-                            <td>string</td>
-                            <td>Recipient phone number (with country code)</td>
-                        </tr>
-                        <tr>
-                            <td>message</td>
-                            <td>string</td>
-                            <td>The text message content</td>
-                        </tr>
-                    </table>
-                    <div class="code-block">
-                        <button class="copy-btn">cURL</button>
-                        <pre id="curlTextExample"></pre>
-                    </div>
+            <div class="doc-card">
+                <div class="endpoint">
+                    <span class="method post">POST</span>
+                    <span class="url">/api/messages/send-file</span>
                 </div>
-
-                <div class="doc-card">
-                    <div class="endpoint">
-                        <span class="method get">GET</span>
-                        <span class="url">/api/messages/send</span>
-                    </div>
-                    <p style="font-size: 14px; margin-top: 10px; color: var(--text-dim);">You can also send messages
-                        using a simple HTTP GET request.</p>
-                    <div class="code-block">
-                        <button class="copy-btn">URL</button>
-                        <pre id="getUrlTextExample"></pre>
-                    </div>
+                <table class="param-table">
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td><code>deviceId</code></td>
+                        <td><span class="type-badge">string</span></td>
+                        <td>The unique ID of the session</td>
+                    </tr>
+                    <tr>
+                        <td><code>number</code></td>
+                        <td><span class="type-badge">string</span></td>
+                        <td>Recipient phone number</td>
+                    </tr>
+                    <tr>
+                        <td><code>url</code></td>
+                        <td><span class="type-badge">string</span></td>
+                        <td>Public URL of the document</td>
+                    </tr>
+                    <tr>
+                        <td><code>fileName</code></td>
+                        <td><span class="type-badge">string</span></td>
+                        <td>(Optional) Custom name for the file</td>
+                    </tr>
+                    <tr>
+                        <td><code>mimetype</code></td>
+                        <td><span class="type-badge">string</span></td>
+                        <td>(Optional) MIME type (defaults to application/pdf)</td>
+                    </tr>
+                </table>
+                <div class="code-block">
+                    <button class="copy-btn" onclick="copyToClipboard('curlFileExample')">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        Copy cURL
+                    </button>
+                    <pre id="curlFileExample"></pre>
                 </div>
-            </section>
+            </div>
 
-            <section id="docs">
-                <h3>Sending PDF / Documents</h3>
-                <p>Send PDFs, images, or any other documents by providing a public URL.</p>
-
-                <div class="doc-card">
-                    <div class="endpoint">
-                        <span class="method post">POST</span>
-                        <span class="url">/api/messages/send-file</span>
-                    </div>
-                    <table class="param-table">
-                        <tr>
-                            <th>Parameter</th>
-                            <th>Type</th>
-                            <th>Description</th>
-                        </tr>
-                        <tr>
-                            <td>deviceId</td>
-                            <td>string</td>
-                            <td>The unique ID of the session</td>
-                        </tr>
-                        <tr>
-                            <td>number</td>
-                            <td>string</td>
-                            <td>Recipient phone number</td>
-                        </tr>
-                        <tr>
-                            <td>url</td>
-                            <td>string</td>
-                            <td>Public URL of the document</td>
-                        </tr>
-                        <tr>
-                            <td>fileName</td>
-                            <td>string</td>
-                            <td>(Optional) Custom name for the file</td>
-                        </tr>
-                        <tr>
-                            <td>mimetype</td>
-                            <td>string</td>
-                            <td>(Optional) MIME type (defaults to application/pdf)</td>
-                        </tr>
-                    </table>
-                    <div class="code-block">
-                        <button class="copy-btn">cURL</button>
-                        <pre id="curlFileExample"></pre>
-                    </div>
+            <div class="doc-card">
+                <p class="card-title">JavaScript Fetch Example</p>
+                <div class="code-block">
+                    <button class="copy-btn" onclick="copyToClipboard('jsFileExample')">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        Copy JS
+                    </button>
+                    <pre id="jsFileExample"></pre>
                 </div>
+            </div>
 
-                <div class="doc-card">
-                    <p>JavaScript Fetch Example (Integrated):</p>
-                    <div class="code-block">
-                        <button class="copy-btn">JavaScript</button>
-                        <pre id="jsFileExample"></pre>
-                    </div>
+            <div class="doc-card">
+                <div class="endpoint">
+                    <span class="method get">GET</span>
+                    <span class="url">/api/messages/send-file</span>
                 </div>
-
-                <div class="doc-card">
-                    <div class="endpoint">
-                        <span class="method get">GET</span>
-                        <span class="url">/api/messages/send-file</span>
-                    </div>
-                    <p style="font-size: 14px; margin-top: 10px; color: var(--text-dim);">You can also send documents
-                        using a simple HTTP GET request.</p>
-                    <div class="code-block">
-                        <button class="copy-btn">URL</button>
-                        <pre id="getUrlFileExample"></pre>
-                    </div>
+                <p class="note">You can also send documents using a simple HTTP GET request.</p>
+                <div class="code-block">
+                    <button class="copy-btn" onclick="copyToClipboard('getUrlFileExample')">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        Copy URL
+                    </button>
+                    <pre id="getUrlFileExample"></pre>
                 </div>
-            </section>
-        </main>
-    </div>
+            </div>
+        </section>
+    </main>
 
-    <script>
-        const token = localStorage.getItem('wa_api_token');
-        if (!token) window.location.href = '/login';
-
-        const deviceId = window.location.pathname.split('/')[2];
-        const baseUrl = window.location.origin;
-
-        async function loadDocs() {
-            try {
-                const res = await fetch(`/api/sessions/${deviceId}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await res.json();
-
-                if (!data.success) {
-                    alert('Session not found');
-                    window.location.href = '/';
-                    return;
-                }
-
-                const session = data.session;
-                const apiKey = session.apiKey || session.api_key;
-
-                document.getElementById('deviceDisplayName').textContent = deviceId;
-                document.getElementById('authKeyLabel').textContent = apiKey || 'NOT_SET';
-                document.getElementById('backLink').href = `/session/${deviceId}`;
-
-                if (apiKey) {
-                    // Text POST
-                    document.getElementById('curlTextExample').textContent = `curl -X POST ${baseUrl}/api/messages/send \\
-  -H "Authorization: Bearer ${apiKey}" \\
-  -H "Content-Type: application/json" \\
-  -d '{"deviceId": "${deviceId}", "number": "1234567890", "message": "Hello World"}'`;
-
-                    // Text GET
-                    document.getElementById('getUrlTextExample').textContent = `${baseUrl}/api/messages/send?deviceId=${deviceId}&number=1234567890&message=Hello+World&apiKey=${apiKey}`;
-
-                    // File POST
-                    document.getElementById('curlFileExample').textContent = `curl -X POST ${baseUrl}/api/messages/send-file \\
-  -H "Authorization: Bearer ${apiKey}" \\
-  -H "Content-Type: application/json" \\
-  -d '{"deviceId": "${deviceId}", "number": "1234567890", "url": "https://pdfobject.com/pdf/sample.pdf", "fileName": "sample.pdf"}'`;
-
-                    // JS Example
-                    document.getElementById('jsFileExample').textContent = `await fetch('${baseUrl}/api/messages/send-file', {
-  method: 'POST',
-  headers: {
-    'Authorization': 'Bearer ${apiKey}',
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    deviceId: '${deviceId}',
-    number: '1234567890',
-    url: 'https://pdfobject.com/pdf/sample.pdf',
-    fileName: 'sample.pdf'
-  })
-});`;
-
-                    // File GET
-                    document.getElementById('getUrlFileExample').textContent = `${baseUrl}/api/messages/send-file?deviceId=${deviceId}&number=1234567890&url=https://pdfobject.com/pdf/sample.pdf&fileName=sample.pdf&apiKey=${apiKey}`;
-                } else {
-                    const fallback = "// Please set an API Key for this device to see live examples";
-                    ['curlTextExample', 'getUrlTextExample', 'curlFileExample', 'jsFileExample', 'getUrlFileExample'].forEach(id => {
-                        document.getElementById(id).textContent = fallback;
-                    });
-                }
-
-            } catch (error) {
-                console.error('Error loading docs:', error);
-            }
-        }
-
-        // Active link handling on scroll
-        window.addEventListener('scroll', () => {
-            const sections = document.querySelectorAll('section');
-            const navLinks = document.querySelectorAll('.nav-link');
-
-            let current = '';
-            sections.forEach(section => {
-                const sectionTop = section.offsetTop;
-                if (pageYOffset >= sectionTop - 60) {
-                    current = section.getAttribute('id');
-                }
-            });
-
-            navLinks.forEach(link => {
-                link.classList.remove('active');
-                if (link.getAttribute('href') === `#${current}`) {
-                    link.classList.add('active');
-                }
-            });
-        });
-
-        loadDocs();
-    </script>
+    <script src="/js/docs.js"></script>
 </body>
 
 </html>

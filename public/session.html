@@ -5,528 +5,169 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Session Detail - Cloud Whatsapp</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html {
-            scrollbar-gutter: stable;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #0a0e27;
-            padding: 20px;
-            color: #ffffff;
-            overflow-x: hidden;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .session-grid {
-            display: grid;
-            grid-template-columns: 380px 1fr;
-            gap: 16px;
-            align-items: start;
-        }
-
-        @media (max-width: 1000px) {
-            .session-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: #10b981;
-            text-decoration: none;
-            margin-bottom: 16px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .back-link:hover {
-            transform: translateX(-4px);
-            color: #059669;
-        }
-
-        h1 {
-            color: white;
-            font-size: 2rem;
-            margin-bottom: 16px;
-        }
-
-        .card {
-            background: #1e293b;
-            padding: 20px;
-            border-radius: 16px;
-            border: 1px solid #334155;
-            margin-bottom: 16px;
-            animation: slideUp 0.4s ease;
-        }
-
-        .card h2 {
-            color: #ffffff;
-            margin-bottom: 16px;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .status {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 20px;
-        }
-
-        .status.disconnected {
-            background: rgba(239, 68, 68, 0.1);
-            color: #ef4444;
-            border: 1px solid rgba(239, 68, 68, 0.2);
-        }
-
-        .status.waiting_qr {
-            background: rgba(59, 130, 246, 0.1);
-            color: #3b82f6;
-            border: 1px solid rgba(59, 130, 246, 0.2);
-        }
-
-        .status.connected {
-            background: rgba(16, 185, 129, 0.1);
-            color: #10b981;
-            border: 1px solid rgba(16, 185, 129, 0.2);
-        }
-
-        .info-row {
-            margin: 12px 0;
-            color: #94a3b8;
-            font-size: 15px;
-        }
-
-        .info-row strong {
-            color: #cbd5e1;
-            font-weight: 600;
-        }
-
-        .qr-container {
-            text-align: center;
-            padding: 32px;
-            background: #0f172a;
-            border-radius: 12px;
-            border: 1px solid #334155;
-        }
-
-        .qr-container img {
-            max-width: 280px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-        }
-
-        .qr-container p {
-            margin-top: 16px;
-            color: #94a3b8;
-            font-weight: 500;
-        }
-
-        .btn {
-            background: #10b981;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 15px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn:hover {
-            background: #059669;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
-        }
-
-        .btn:active {
-            transform: translateY(0);
-        }
-
-        .btn-danger {
-            background: #ef4444;
-            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
-        }
-
-        .btn-danger:hover {
-            background: #dc2626;
-            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
-        }
-
-        .btn-secondary {
-            background: #334155;
-            color: #ffffff;
-            box-shadow: none;
-        }
-
-        .btn-secondary:hover {
-            background: #475569;
-        }
-
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #cbd5e1;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid #334155;
-            background: #0f172a;
-            color: #ffffff;
-            border-radius: 8px;
-            font-size: 15px;
-            font-family: inherit;
-            transition: all 0.3s ease;
-        }
-
-        .form-group input:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #10b981;
-            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-        }
-
-        .api-key-display {
-            background: #0f172a;
-            padding: 16px;
-            border-radius: 8px;
-            border: 1px solid #334155;
-            font-family: 'Courier New', monospace;
-            word-break: break-all;
-            color: #10b981;
-            font-size: 14px;
-            margin-bottom: 16px;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .actions {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .icon {
-            width: 20px;
-            height: 20px;
-            fill: none;
-            stroke: currentColor;
-            stroke-width: 2;
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Modal & Form Styles */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: #1e293b;
-            padding: 30px;
-            border-radius: 12px;
-            width: 100%;
-            max-width: 500px;
-            border: 1px solid #334155;
-            color: #f1f5f9;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-
-        .modal-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-        }
-
-        .btn-close {
-            background: none;
-            border: none;
-            color: #94a3b8;
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #cbd5e1;
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 12px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid #334155;
-            border-radius: 8px;
-            color: white;
-            transition: 0.2s;
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: #10b981;
-            background: rgba(0, 0, 0, 0.5);
-        }
-
-        .btn-save {
-            width: 100%;
-            padding: 12px;
-            background: #10b981;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            margin-top: 10px;
-        }
-
-        .btn-save:hover {
-            background: #059669;
-        }
-    </style>
+    <link rel="stylesheet" href="/css/session.css">
 </head>
 
 <body>
-    <div class="container">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-            <div style="display: flex; gap: 15px; align-items: center;">
-                <a href="/" class="back-link" style="margin-bottom: 0;">
-                    <svg class="icon" viewBox="0 0 24 24">
-                        <line x1="19" y1="12" x2="5" y2="12"></line>
-                        <polyline points="12 19 5 12 12 5"></polyline>
-                    </svg>
-                    Back to Sessions
-                </a>
-                <a href="#" onclick="window.location.href += '/docs'" class="btn btn-secondary"
-                    style="padding: 8px 16px; font-size: 13px; text-decoration: none; background: var(--accent); color: white; border: none; display: flex; align-items: center; gap: 8px;">
-                    <svg class="icon" style="width: 14px; height: 14px;" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14 2 14 8 20 8"></polyline>
-                    </svg>
-                    API Documentation
-                </a>
-            </div>
-            <div id="userProfile" style="display: flex; align-items: center; gap: 15px;">
-                <span id="usernameDisplay" style="color: #cbd5e1; font-weight: 600;"></span>
-                <button class="btn btn-secondary"
-                    style="padding: 8px 16px; font-size: 13px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid #10b981;"
-                    onclick="openProfile()">Profile</button>
-                <button class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px;"
-                    onclick="logout()">Logout</button>
-            </div>
+    <!-- Static Header -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="/" class="back-link" title="Back to Sessions">
+                <svg class="icon" viewBox="0 0 24 24">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                Back
+            </a>
+        </div>
+        <div class="header-right">
+            <a href="#" onclick="window.location.href += '/docs'" class="nav-link">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+                API Documentation
+            </a>
+            <span id="usernameDisplay"></span>
+            <button class="btn-profile" onclick="openProfile()">Profile</button>
+            <button class="btn-logout" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <div class="container main-content">
+        <div class="page-title">
+            <h1 id="deviceIdTitle">Loading...</h1>
         </div>
 
-        <h1 id="deviceIdTitle">Loading...</h1>
+        <!-- Top Row: Management Cards -->
+        <div class="management-grid">
+            <!-- Session Info Card -->
+            <div class="card">
+                <div id="statusBadge" class="status-badge">Loading...</div>
+                <div id="sessionInfo" class="info-list"></div>
 
-        <div class="session-grid">
-            <!-- Left Column: Session Info & Management -->
-            <div class="left-col">
-                <div class="card">
-                    <div id="statusBadge" class="status">Loading...</div>
-                    <div id="sessionInfo"></div>
-                </div>
-
-                <div id="qrSection" class="card hidden">
-                    <h2>
+                <!-- Connect Button -->
+                <div id="connectSection" class="hidden">
+                    <button class="btn btn-connect" onclick="startSession()">
                         <svg class="icon" viewBox="0 0 24 24">
                             <rect x="3" y="3" width="7" height="7"></rect>
                             <rect x="14" y="3" width="7" height="7"></rect>
                             <rect x="14" y="14" width="7" height="7"></rect>
                             <rect x="3" y="14" width="7" height="7"></rect>
                         </svg>
-                        Scan QR Code
-                    </h2>
-                    <div class="qr-container" id="qrContainer">
-                        <p>Loading QR code...</p>
-                    </div>
-                </div>
-
-                <div id="apiKeySection" class="card hidden">
-                    <h2>
-                        <svg class="icon" viewBox="0 0 24 24">
-                            <path
-                                d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4">
-                            </path>
-                        </svg>
-                        API Key Management
-                    </h2>
-                    <div id="apiKeyDisplay"></div>
-                    <button class="btn" onclick="showApiKeyForm()">
-                        <svg class="icon" style="width: 16px; height: 16px;" viewBox="0 0 24 24">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                        </svg>
-                        Set/Update API Key
-                    </button>
-
-                    <div id="apiKeyForm" class="hidden" style="margin-top: 20px;">
-                        <div class="form-group">
-                            <label>New API Key (leave empty to auto-generate)</label>
-                            <input type="text" id="apiKeyInput" placeholder="Optional: enter custom key">
-                        </div>
-                        <div class="actions">
-                            <button class="btn" onclick="updateApiKey()">
-                                <svg class="icon" style="width: 16px; height: 16px;" viewBox="0 0 24 24">
-                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                </svg>
-                                Save API Key
-                            </button>
-                            <button class="btn btn-secondary" onclick="hideApiKeyForm()">Cancel</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <h2>
-                        <svg class="icon" viewBox="0 0 24 24">
-                            <circle cx="12" cy="12" r="3"></circle>
-                            <path d="M12 1v6m0 6v6m9-9h-6m-6 0H3"></path>
-                        </svg>
-                        Actions
-                    </h2>
-                    <button class="btn btn-danger" onclick="deleteSession()">
-                        <svg class="icon" style="width: 16px; height: 16px;" viewBox="0 0 24 24">
-                            <polyline points="3 6 5 6 21 6"></polyline>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
-                            </path>
-                        </svg>
-                        Delete Session
+                        Generate QR Code
                     </button>
                 </div>
             </div>
 
-            <!-- Right Column: Interaction Fields -->
-            <div class="right-col">
+            <!-- API Key Card -->
+            <div id="apiKeySection" class="card hidden">
+                <h3>
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path
+                            d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4">
+                        </path>
+                    </svg>
+                    API Key Management
+                </h3>
+                <div id="apiKeyDisplay" style="margin-bottom: 16px;"></div>
+                <button class="btn btn-secondary-outline" onclick="showApiKeyForm()" style="width:100%">
+                    <svg class="icon" style="width: 16px; height: 16px;" viewBox="0 0 24 24">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                    Set/Update API Key
+                </button>
+
+                <div id="apiKeyForm" class="hidden" style="margin-top: 16px;">
+                    <div class="form-group">
+                        <input type="text" id="apiKeyInput" placeholder="New API Key">
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn" onclick="updateApiKey()" style="flex:1">Save</button>
+                        <button class="btn btn-secondary" onclick="hideApiKeyForm()" style="flex:1">Cancel</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions Card -->
+            <div class="card">
+                <h3>
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M12 1v6m0 6v6m9-9h-6m-6 0H3"></path>
+                    </svg>
+                    Actions
+                </h3>
+                <button class="btn btn-danger" onclick="deleteSession()" style="width:100%">
+                    Delete Session
+                </button>
+            </div>
+        </div>
+
+        <!-- Bottom Row: Communication Tools (Centered) -->
+        <div class="tools-wrapper">
+            <div class="tools-grid">
+                <!-- Send Message Card -->
                 <div id="messageSection" class="card hidden">
-                    <h2>
+                    <h3>
                         <svg class="icon" viewBox="0 0 24 24">
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                         </svg>
                         Send Test Message
-                    </h2>
+                    </h3>
                     <div class="form-group">
                         <label>Phone Number</label>
                         <input type="text" id="phoneInput" placeholder="e.g., 1234567890">
                     </div>
                     <div class="form-group">
                         <label>Message</label>
-                        <textarea id="messageInput" rows="3" placeholder="Hello World"></textarea>
+                        <textarea id="messageInput" rows="5.59" placeholder="Hello World"></textarea>
                     </div>
-                    <button class="btn" onclick="sendMessage()">
-                        <svg class="icon" style="width: 16px; height: 16px;" viewBox="0 0 24 24">
-                            <line x1="22" y1="2" x2="11" y2="13"></line>
-                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                        </svg>
-                        Send Message
-                    </button>
+                    <button class="btn" onclick="sendMessage()" style="width:100%">Send Message</button>
                 </div>
 
+                <!-- Send PDF Card -->
                 <div id="pdfSection" class="card hidden">
-                    <h2>
+                    <h3>
                         <svg class="icon" viewBox="0 0 24 24">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                             <polyline points="14 2 14 8 20 8"></polyline>
-                            <line x1="16" y1="13" x2="8" y2="13"></line>
-                            <line x1="16" y1="17" x2="8" y2="17"></line>
-                            <polyline points="10 9 9 9 8 9"></polyline>
                         </svg>
                         Send PDF Document
-                    </h2>
+                    </h3>
                     <div class="form-group">
                         <label>Recipient Phone Number</label>
                         <input type="text" id="pdfPhoneInput" placeholder="e.g., 1234567890">
                     </div>
                     <div class="form-group">
                         <label>PDF URL</label>
-                        <input type="text" id="pdfUrlInput" placeholder="https://pdfobject.com/pdf/sample.pdf">
+                        <input type="text" id="pdfUrlInput" placeholder="https://example.com/file.pdf">
                     </div>
                     <div class="form-group">
                         <label>File Name (Optional)</label>
-                        <input type="text" id="pdfFileNameInput" placeholder="my-invoice.pdf">
+                        <input type="text" id="pdfFileNameInput" placeholder="document.pdf">
                     </div>
-                    <button class="btn" onclick="sendPDF()">
-                        <svg class="icon" style="width: 16px; height: 16px;" viewBox="0 0 24 24">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="17 8 12 3 7 8"></polyline>
-                            <line x1="12" y1="3" x2="12" y2="15"></line>
-                        </svg>
-                        Send PDF
-                    </button>
+                    <button class="btn" onclick="sendPDF()" style="width:100%">Send PDF</button>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- QR Code Modal -->
+    <div id="qrModal" class="modal">
+        <div class="modal-content qr-modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Scan QR Code</h2>
+                <button class="btn-close" onclick="closeQRModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="qr-instructions">Open WhatsApp on your phone, go to Linked Devices, and scan this code.</p>
+                <div class="qr-container" id="qrContainer">
+                    <div class="qr-placeholder">Generating QR...</div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Profile Modal -->
@@ -550,361 +191,16 @@
                     <input type="email" id="p_email" placeholder="john@example.com">
                 </div>
                 <div class="form-group">
-                    <label>New Password (leave blank to keep current)</label>
-                    <input type="password" id="p_password" placeholder="Min 6 characters">
+                    <label>New Password</label>
+                    <input type="password" id="p_password">
                 </div>
                 <button type="submit" class="btn-save">Save Changes</button>
-                <p id="profileMsg" style="margin-top:10px; text-align:center; font-size:0.9rem;"></p>
+                <p id="profileMsg"></p>
             </form>
         </div>
     </div>
 
-    <script>
-        // Auth check
-        const token = localStorage.getItem('wa_api_token');
-        if (!token) {
-            window.location.href = '/login';
-        }
-
-        const user = JSON.parse(localStorage.getItem('wa_api_user') || '{}');
-        document.getElementById('usernameDisplay').textContent = user.username || '';
-
-        function logout() {
-            localStorage.removeItem('wa_api_token');
-            localStorage.removeItem('wa_api_user');
-            window.location.href = '/login';
-        }
-
-        const deviceId = window.location.pathname.split('/').pop();
-        let currentSession = null;
-
-        async function loadSession() {
-            try {
-                const res = await fetch(`/api/sessions/${deviceId}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (res.status === 401) {
-                    logout();
-                    return;
-                }
-
-                const data = await res.json();
-
-                if (!data.success) {
-                    alert('Session not found');
-                    window.location.href = '/';
-                    return;
-                }
-
-                currentSession = data.session;
-                // Robust property access
-                currentSession.apiKey = currentSession.apiKey || currentSession.api_key;
-                console.log('Session loaded:', currentSession.deviceId, 'Has Key:', currentSession.hasApiKey);
-                updateUI();
-            } catch (error) {
-                console.error('Error loading session:', error);
-            }
-        }
-
-        function updateUI() {
-            document.getElementById('deviceIdTitle').textContent = currentSession.deviceId;
-
-            const statusBadge = document.getElementById('statusBadge');
-            statusBadge.className = `status ${currentSession.connectionState}`;
-            statusBadge.textContent = formatState(currentSession.connectionState);
-
-            document.getElementById('sessionInfo').innerHTML = `
-                <div class="info-row"><strong>Device ID:</strong> ${currentSession.deviceId}</div>
-                <div class="info-row"><strong>Connection State:</strong> ${formatState(currentSession.connectionState)}</div>
-                <div class="info-row"><strong>API Key:</strong> ${currentSession.hasApiKey ? (currentSession.apiKey || currentSession.api_key || '<span style="color: #ef4444">Error: Key missing</span>') : 'Not Set'}</div>
-                ${currentSession.phoneNumber ? `<div class="info-row"><strong>Phone:</strong> ${currentSession.phoneNumber}</div>` : ''}
-            `;
-
-            if (currentSession.connectionState === 'waiting_qr') {
-                document.getElementById('qrSection').classList.remove('hidden');
-                loadQRCode();
-            } else {
-                document.getElementById('qrSection').classList.add('hidden');
-            }
-
-            if (currentSession.connectionState === 'connected') {
-                document.getElementById('apiKeySection').classList.remove('hidden');
-                document.getElementById('messageSection').classList.remove('hidden');
-                document.getElementById('pdfSection').classList.remove('hidden');
-                updateApiKeyDisplay();
-            } else {
-                document.getElementById('apiKeySection').classList.add('hidden');
-                document.getElementById('messageSection').classList.add('hidden');
-                document.getElementById('pdfSection').classList.add('hidden');
-            }
-        }
-
-
-        async function loadQRCode() {
-            try {
-                const res = await fetch(`/api/sessions/${deviceId}/qr`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (res.status === 401) {
-                    logout();
-                    return;
-                }
-
-                const data = await res.json();
-
-                const container = document.getElementById('qrContainer');
-                if (data.qrImage) {
-                    container.innerHTML = `<img src="${data.qrImage}" alt="QR Code"><p>Scan with WhatsApp</p>`;
-                } else {
-                    container.innerHTML = `<p>${data.message || 'QR not available'}</p>`;
-                }
-            } catch (error) {
-                console.error('Error loading QR:', error);
-            }
-        }
-
-        function updateApiKeyDisplay() {
-            const display = document.getElementById('apiKeyDisplay');
-            if (currentSession.hasApiKey) {
-                display.innerHTML = `<div class="api-key-display">${currentSession.apiKey}</div>`;
-            } else {
-                display.innerHTML = `<p style="color: #94a3b8;">No API key configured</p>`;
-            }
-        }
-
-        function showApiKeyForm() {
-            document.getElementById('apiKeyForm').classList.remove('hidden');
-        }
-
-        function hideApiKeyForm() {
-            document.getElementById('apiKeyForm').classList.add('hidden');
-            document.getElementById('apiKeyInput').value = '';
-        }
-
-        async function updateApiKey() {
-            const apiKey = document.getElementById('apiKeyInput').value.trim();
-
-            try {
-                const res = await fetch(`/api/sessions/${deviceId}/api-key`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ apiKey: apiKey || undefined })
-                });
-
-                if (res.status === 401) {
-                    logout();
-                    return;
-                }
-
-                const data = await res.json();
-
-                if (data.success) {
-                    alert(`API Key updated!\n\nYour API Key: ${data.apiKey}\n\nSave this key securely. It won't be shown again.`);
-                    hideApiKeyForm();
-                    loadSession();
-                } else {
-                    alert('Error: ' + data.error);
-                }
-            } catch (error) {
-                alert('Error: ' + error.message);
-            }
-        }
-
-        async function sendMessage() {
-            const phone = document.getElementById('phoneInput').value.trim();
-            const message = document.getElementById('messageInput').value.trim();
-
-            if (!phone || !message) {
-                alert('Please enter phone number and message');
-                return;
-            }
-
-            if (!currentSession.hasApiKey) {
-                alert('Please set an API Key first');
-                return;
-            }
-
-            try {
-                const res = await fetch('/api/messages/send', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${currentSession.apiKey}`
-                    },
-                    body: JSON.stringify({
-                        deviceId: deviceId,
-                        number: phone,
-                        message: message
-                    })
-                });
-
-                const data = await res.json();
-                if (data.success) {
-                    alert('Message sent!');
-                    document.getElementById('messageInput').value = '';
-                } else {
-                    alert('Error: ' + data.error);
-                }
-            } catch (error) {
-                alert('Error: ' + error.message);
-            }
-        }
-
-        async function sendPDF() {
-            const phone = document.getElementById('pdfPhoneInput').value.trim();
-            const url = document.getElementById('pdfUrlInput').value.trim();
-            const fileName = document.getElementById('pdfFileNameInput').value.trim();
-
-            if (!phone || !url) {
-                alert('Please enter phone number and PDF URL');
-                return;
-            }
-
-            if (!currentSession.hasApiKey) {
-                alert('Please set an API Key first');
-                return;
-            }
-
-            try {
-                const res = await fetch('/api/messages/send-file', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${currentSession.apiKey}`
-                    },
-                    body: JSON.stringify({
-                        deviceId: deviceId,
-                        number: phone,
-                        url: url,
-                        fileName: fileName || undefined
-                    })
-                });
-
-                const data = await res.json();
-                if (data.success) {
-                    alert('PDF sent!');
-                    document.getElementById('pdfUrlInput').value = '';
-                } else {
-                    alert('Error: ' + data.error);
-                }
-            } catch (error) {
-                alert('Error: ' + error.message);
-            }
-        }
-
-        async function deleteSession() {
-            if (!confirm(`Are you sure you want to delete session ${deviceId}?`)) {
-                return;
-            }
-
-            try {
-                const res = await fetch(`/api/sessions/${deviceId}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (res.status === 401) {
-                    logout();
-                    return;
-                }
-
-                const data = await res.json();
-
-                if (data.success) {
-                    alert('Session deleted');
-                    window.location.href = '/';
-                } else {
-                    alert('Error: ' + data.error);
-                }
-            } catch (error) {
-                alert('Error: ' + error.message);
-            }
-        }
-
-        function formatState(state) {
-            const states = {
-                'disconnected': 'Disconnected',
-                'waiting_qr': 'Waiting for QR',
-                'connected': 'Connected'
-            };
-            return states[state] || state;
-        }
-
-        // Profile Functions
-        function openProfile() {
-            const user = JSON.parse(localStorage.getItem('wa_api_user') || '{}');
-            document.getElementById('p_username').value = user.username || '';
-            document.getElementById('p_name').value = user.name || '';
-            document.getElementById('p_email').value = user.email || '';
-            document.getElementById('p_password').value = '';
-            document.getElementById('profileMsg').textContent = '';
-            document.getElementById('profileModal').classList.add('active');
-        }
-
-        function closeProfile() {
-            document.getElementById('profileModal').classList.remove('active');
-        }
-
-        async function updateProfile(e) {
-            e.preventDefault();
-            const btn = e.target.querySelector('button');
-            const msg = document.getElementById('profileMsg');
-
-            const username = document.getElementById('p_username').value;
-            const name = document.getElementById('p_name').value;
-            const email = document.getElementById('p_email').value;
-            const password = document.getElementById('p_password').value;
-
-            btn.disabled = true;
-            btn.innerText = 'Saving...';
-            msg.textContent = '';
-
-            try {
-                const body = { username, name, email };
-                if (password) body.password = password;
-
-                const res = await fetch('/api/auth/update-profile', {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(body)
-                });
-                const data = await res.json();
-
-                if (data.success) {
-                    msg.style.color = '#10b981';
-                    msg.textContent = 'Profile updated successfully!';
-
-                    // Update local storage
-                    localStorage.setItem('wa_api_user', JSON.stringify({ ...data.user }));
-                    // Update header display if name changed
-                    document.getElementById('usernameDisplay').textContent = data.user.name || data.user.username;
-
-                    setTimeout(closeProfile, 1500);
-                } else {
-                    msg.style.color = '#ef4444';
-                    msg.textContent = data.error;
-                }
-            } catch (err) {
-                msg.style.color = '#ef4444';
-                msg.textContent = 'Error updating profile';
-            } finally {
-                btn.disabled = false;
-                btn.innerText = 'Save Changes';
-            }
-        }
-
-
-        loadSession();
-        setInterval(loadSession, 3000);
-    </script>
+    <script src="/js/session.js"></script>
 </body>
 
 </html>
