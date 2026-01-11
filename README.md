@@ -192,10 +192,12 @@ journalctl -u cloudflared -f
 
 </details>
 
----
+### Option 3: VPS or Docker
 
-## ⚙️ Configuration
+**Best for:** Traditional hosting | **Cost:** Varies ($5-20/month)
 
+<details>
+<parameter name="summary">Click to expand VPS/Docker deployment
 See `.env.example` for all options. Generate secure secrets:
 
 ```bash
