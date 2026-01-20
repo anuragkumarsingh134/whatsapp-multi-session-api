@@ -94,6 +94,51 @@ const adminController = {
         } catch (error) {
             res.status(500).json({ success: false, error: error.message });
         }
+    },
+
+    // Get ALL devices/sessions across ALL users
+    getAllDevices: (req, res) => {
+        try {
+            const devices = db.prepare(`
+                SELECT 
+                    s.device_id,
+                    s.user_id,
+                    s.phone_number,
+                    s.connection_state,
+                    s.created_at,
+                    u.username
+                FROM sessions s
+                LEFT JOIN users u ON s.user_id = u.id
+                ORDER BY s.created_at DESC
+            `).all();
+
+            res.json({ success: true, devices });
+        } catch (error) {
+            res.status(500).json({ success: false, error: error.message });
+        }
+    },
+
+    // Delete a device/session by device_id
+    deleteDevice: async (req, res) => {
+        try {
+            const { deviceId } = req.params;
+
+            // First logout the session if active
+            const sessionManager = require('../services/sessionManager');
+            try {
+                await sessionManager.deleteSession(deviceId);
+            } catch (e) {
+                console.log(`[Admin] Session ${deviceId} not active in memory`);
+            }
+
+            // Delete from database
+            db.prepare('DELETE FROM auth_state WHERE device_id = ?').run(deviceId);
+            db.prepare('DELETE FROM sessions WHERE device_id = ?').run(deviceId);
+
+            res.json({ success: true, message: `Device ${deviceId} deleted successfully` });
+        } catch (error) {
+            res.status(500).json({ success: false, error: error.message });
+        }
     }
 };
 

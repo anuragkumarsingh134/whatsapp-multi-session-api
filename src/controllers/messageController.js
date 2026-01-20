@@ -35,7 +35,20 @@ const messageController = {
             const { deviceId, number, message, apiKey } = req.query;
 
             // Check for API key in query or header
-            const authKey = apiKey || req.headers.authorization?.replace('Bearer ', '');
+            let authKey = apiKey;
+
+            if (!authKey && req.headers.authorization) {
+                const authHeader = req.headers.authorization;
+                if (authHeader.toLowerCase().startsWith('bearer ')) {
+                    authKey = authHeader.substring(7).trim();
+                } else {
+                    authKey = authHeader.trim();
+                }
+            }
+
+            if (!authKey) {
+                authKey = req.headers['x-api-key'] || req.headers['api-key'];
+            }
 
             if (!authKey) {
                 return res.status(401).json({
@@ -106,7 +119,20 @@ const messageController = {
             const { deviceId, number, url, fileName, mimetype, apiKey } = req.query;
 
             // Check for API key in query or header
-            const authKey = apiKey || req.headers.authorization?.replace('Bearer ', '');
+            let authKey = apiKey;
+
+            if (!authKey && req.headers.authorization) {
+                const authHeader = req.headers.authorization;
+                if (authHeader.toLowerCase().startsWith('bearer ')) {
+                    authKey = authHeader.substring(7).trim();
+                } else {
+                    authKey = authHeader.trim();
+                }
+            }
+
+            if (!authKey) {
+                authKey = req.headers['x-api-key'] || req.headers['api-key'];
+            }
 
             if (!authKey) {
                 return res.status(401).json({

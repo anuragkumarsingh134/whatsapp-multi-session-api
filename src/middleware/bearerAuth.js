@@ -1,16 +1,37 @@
 const { validateApiKey, getSession } = require('../db/database');
 
 const bearerAuth = (req, res, next) => {
-    const authHeader = req.headers.authorization;
+    let apiKey = null;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    // 1. Check Authorization header (Bearer)
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+        if (authHeader.toLowerCase().startsWith('bearer ')) {
+            apiKey = authHeader.substring(7).trim();
+        } else {
+            // Provide fallback even if not strictly "Bearer "
+            // Some clients might send just the token
+            apiKey = authHeader.trim();
+        }
+    }
+
+    // 2. Check x-api-key or api-key headers if no Bearer token found
+    if (!apiKey) {
+        apiKey = req.headers['x-api-key'] || req.headers['api-key'];
+    }
+
+    // 3. Fallback to query param (optional, mostly for GET requests but good for robustness)
+    if (!apiKey && req.query.apiKey) {
+        apiKey = req.query.apiKey;
+    }
+
+    if (!apiKey) {
         return res.status(401).json({
             success: false,
-            error: 'Missing or invalid Authorization header. Expected: Bearer <api_key>'
+            error: 'Missing API key. Please provide Authorization: Bearer <key> or x-api-key header.'
         });
     }
 
-    const apiKey = authHeader.substring(7); // Remove 'Bearer '
     const deviceId = req.params.deviceId || req.query.deviceId || (req.body && req.body.deviceId);
 
     if (!deviceId) {

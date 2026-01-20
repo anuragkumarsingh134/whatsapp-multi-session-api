@@ -250,6 +250,96 @@ const initializeSessions = async () => {
             console.error(`Failed to restore session ${session.device_id}:`, error.message);
         }
     }
+
+    // Start periodic health check after initialization
+    startHealthCheck();
+};
+
+/**
+ * Health check interval (2 hours in milliseconds)
+ */
+const HEALTH_CHECK_INTERVAL = 2 * 60 * 60 * 1000; // 2 hours
+let healthCheckTimer = null;
+
+/**
+ * Check if a session is alive by checking socket state
+ */
+const isSessionAlive = (session) => {
+    try {
+        // Check if socket exists and has an active connection
+        if (!session || !session.sock) return false;
+        if (session.status !== 'connected') return false;
+
+        // Check if the WebSocket is open
+        const ws = session.sock.ws;
+        if (!ws || ws.readyState !== 1) return false; // 1 = OPEN
+
+        return true;
+    } catch (error) {
+        return false;
+    }
+};
+
+/**
+ * Perform health check on all active sessions
+ */
+const performHealthCheck = async () => {
+    console.log(`[Health Check] Running periodic health check on ${activeSessions.size} session(s)...`);
+
+    for (const [deviceId, session] of activeSessions.entries()) {
+        try {
+            if (session.status !== 'connected') {
+                continue; // Skip non-connected sessions
+            }
+
+            const alive = isSessionAlive(session);
+
+            if (!alive) {
+                console.log(`[Health Check] Session ${deviceId} appears stale. Attempting reconnect...`);
+
+                // Clean up the dead session
+                activeSessions.delete(deviceId);
+
+                // Try to reconnect
+                try {
+                    await createSession(deviceId);
+                    console.log(`[Health Check] Session ${deviceId} reconnected successfully`);
+                } catch (reconnectError) {
+                    console.error(`[Health Check] Failed to reconnect session ${deviceId}:`, reconnectError.message);
+                    updateSessionState(deviceId, 'disconnected');
+                }
+            } else {
+                console.log(`[Health Check] Session ${deviceId} is healthy`);
+            }
+        } catch (error) {
+            console.error(`[Health Check] Error checking session ${deviceId}:`, error.message);
+        }
+    }
+
+    console.log(`[Health Check] Completed`);
+};
+
+/**
+ * Start the periodic health check
+ */
+const startHealthCheck = () => {
+    if (healthCheckTimer) {
+        clearInterval(healthCheckTimer);
+    }
+
+    healthCheckTimer = setInterval(performHealthCheck, HEALTH_CHECK_INTERVAL);
+    console.log(`[Health Check] Started - will check sessions every 2 hours`);
+};
+
+/**
+ * Stop the periodic health check
+ */
+const stopHealthCheck = () => {
+    if (healthCheckTimer) {
+        clearInterval(healthCheckTimer);
+        healthCheckTimer = null;
+        console.log(`[Health Check] Stopped`);
+    }
 };
 
 module.exports = {
@@ -261,5 +351,8 @@ module.exports = {
     sendDocument,
     deleteSession,
     listSessions,
-    initializeSessions
+    initializeSessions,
+    performHealthCheck,
+    startHealthCheck,
+    stopHealthCheck
 };

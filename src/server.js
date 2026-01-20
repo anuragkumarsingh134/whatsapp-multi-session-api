@@ -66,6 +66,11 @@ app.get('/admin/sessions', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/admin-sessions.html'));
 });
 
+// Admin All Devices page route
+app.get('/admin-devices', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/admin-devices.html'));
+});
+
 // File Upload page route
 app.get('/upload', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/upload.html'));

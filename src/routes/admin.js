@@ -23,4 +23,10 @@ router.get('/users/:id/sessions', adminController.getUserSessions);
 // Get System Metrics
 router.get('/metrics', adminController.getMetrics);
 
+// Get ALL devices across all users
+router.get('/devices', adminController.getAllDevices);
+
+// Delete a specific device
+router.delete('/devices/:deviceId', adminController.deleteDevice);
+
 module.exports = router;

@@ -78,15 +78,30 @@ router.post('/upload', upload.single('file'), (req, res, next) => {
     // Now req.body.deviceId is available from multer
     const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    // Extract API Key robustly
+    let apiKey = null;
+    if (authHeader) {
+        if (authHeader.toLowerCase().startsWith('bearer ')) {
+            apiKey = authHeader.substring(7).trim();
+        } else {
+            apiKey = authHeader.trim();
+        }
+    }
+
+    // Fallback to other headers
+    if (!apiKey) {
+        apiKey = req.headers['x-api-key'] || req.headers['api-key'];
+    }
+
+    if (!apiKey) {
         console.log('[File Upload] ERROR: Missing or invalid auth header');
         return res.status(401).json({
             success: false,
-            error: 'Missing or invalid Authorization header. Expected: Bearer <api_key>'
+            error: 'Missing API key. Please provide Authorization: Bearer <key> or x-api-key header.'
         });
     }
 
-    const apiKey = authHeader.substring(7);
+    // const apiKey = authHeader.substring(7); // Removed simple extraction
     const deviceId = req.body.deviceId;
 
     if (!deviceId) {
