@@ -34,6 +34,19 @@ db.exec(`
         PRIMARY KEY (device_id, key_name),
         FOREIGN KEY (device_id) REFERENCES sessions(device_id) ON DELETE CASCADE
     );
+
+    CREATE TABLE IF NOT EXISTS usage_stats (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        date TEXT NOT NULL,
+        messages_sent_daily INTEGER DEFAULT 0,
+        messages_sent_monthly INTEGER DEFAULT 0,
+        storage_used_mb REAL DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        UNIQUE(user_id, date)
+    );
 `);
 
 // Migration: Add user_id to sessions if it doesn't exist
@@ -59,6 +72,18 @@ try {
     // Columns already exist
 }
 
+// Migration: Add quota management columns to users
+try {
+    db.exec("ALTER TABLE users ADD COLUMN device_limit INTEGER DEFAULT 5");
+    db.exec("ALTER TABLE users ADD COLUMN message_quota_daily INTEGER DEFAULT 1000");
+    db.exec("ALTER TABLE users ADD COLUMN message_quota_monthly INTEGER DEFAULT 30000");
+    db.exec("ALTER TABLE users ADD COLUMN storage_limit_mb INTEGER DEFAULT 500");
+    db.exec("ALTER TABLE users ADD COLUMN account_expiry TEXT");
+    db.exec("ALTER TABLE users ADD COLUMN is_quota_unlimited INTEGER DEFAULT 0");
+} catch (e) {
+    // Columns already exist
+}
+
 
 // No longer needed - first user signup becomes admin automatically
 
@@ -67,6 +92,8 @@ db.exec(`
     CREATE INDEX IF NOT EXISTS idx_auth_state_device ON auth_state(device_id);
     CREATE INDEX IF NOT EXISTS idx_sessions_state ON sessions(connection_state);
     CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+    CREATE INDEX IF NOT EXISTS idx_usage_stats_user ON usage_stats(user_id);
+    CREATE INDEX IF NOT EXISTS idx_usage_stats_date ON usage_stats(date);
 `);
 
 // Helper functions
@@ -153,6 +180,114 @@ const helpers = {
         const session = db.prepare('SELECT * FROM sessions WHERE device_id = ? AND api_key = ?')
             .get(deviceId, apiKey);
         return session !== undefined;
+    },
+
+    // Quota management functions
+    getUserQuota: (userId) => {
+        return db.prepare(`
+            SELECT device_limit, message_quota_daily, message_quota_monthly, 
+                   storage_limit_mb, account_expiry, is_quota_unlimited 
+            FROM users WHERE id = ?
+        `).get(userId);
+    },
+
+    updateUserQuota: (userId, quotas) => {
+        const fields = [];
+        const values = [];
+
+        if (quotas.device_limit !== undefined) { fields.push('device_limit = ?'); values.push(quotas.device_limit); }
+        if (quotas.message_quota_daily !== undefined) { fields.push('message_quota_daily = ?'); values.push(quotas.message_quota_daily); }
+        if (quotas.message_quota_monthly !== undefined) { fields.push('message_quota_monthly = ?'); values.push(quotas.message_quota_monthly); }
+        if (quotas.storage_limit_mb !== undefined) { fields.push('storage_limit_mb = ?'); values.push(quotas.storage_limit_mb); }
+        if (quotas.account_expiry !== undefined) { fields.push('account_expiry = ?'); values.push(quotas.account_expiry); }
+        if (quotas.is_quota_unlimited !== undefined) { fields.push('is_quota_unlimited = ?'); values.push(quotas.is_quota_unlimited); }
+
+        if (fields.length === 0) return { changes: 0 };
+
+        values.push(userId);
+        const setClause = fields.join(', ');
+
+        return db.prepare(`UPDATE users SET ${setClause} WHERE id = ?`).run(...values);
+    },
+
+    // Usage tracking functions
+    getTodayUsage: (userId) => {
+        const today = new Date().toISOString().split('T')[0];
+        return db.prepare('SELECT * FROM usage_stats WHERE user_id = ? AND date = ?').get(userId, today);
+    },
+
+    getMonthUsage: (userId) => {
+        const yearMonth = new Date().toISOString().substring(0, 7); // YYYY-MM
+        return db.prepare(`
+            SELECT SUM(messages_sent_daily) as total_messages 
+            FROM usage_stats 
+            WHERE user_id = ? AND date LIKE ?
+        `).get(userId, `${yearMonth}%`);
+    },
+
+    incrementMessageCount: (userId) => {
+        const today = new Date().toISOString().split('T')[0];
+
+        // Try to update existing record
+        const result = db.prepare(`
+            UPDATE usage_stats 
+            SET messages_sent_daily = messages_sent_daily + 1,
+                messages_sent_monthly = messages_sent_monthly + 1,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE user_id = ? AND date = ?
+        `).run(userId, today);
+
+        // If no record exists, create one
+        if (result.changes === 0) {
+            db.prepare(`
+                INSERT INTO usage_stats (user_id, date, messages_sent_daily, messages_sent_monthly)
+                VALUES (?, ?, 1, 1)
+            `).run(userId, today);
+        }
+
+        return result;
+    },
+
+    updateStorageUsage: (userId, sizeMB) => {
+        const today = new Date().toISOString().split('T')[0];
+
+        // Get or create today's usage record
+        let usage = db.prepare('SELECT * FROM usage_stats WHERE user_id = ? AND date = ?').get(userId, today);
+
+        if (!usage) {
+            db.prepare(`
+                INSERT INTO usage_stats (user_id, date, storage_used_mb)
+                VALUES (?, ?, ?)
+            `).run(userId, today, sizeMB);
+        } else {
+            db.prepare(`
+                UPDATE usage_stats 
+                SET storage_used_mb = storage_used_mb + ?,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE user_id = ? AND date = ?
+            `).run(sizeMB, userId, today);
+        }
+    },
+
+    getTotalStorageUsed: (userId) => {
+        const result = db.prepare(`
+            SELECT SUM(storage_used_mb) as total_storage 
+            FROM usage_stats 
+            WHERE user_id = ?
+        `).get(userId);
+
+        return result?.total_storage || 0;
+    },
+
+    resetDailyUsage: () => {
+        // This should be called by a cron job daily
+        const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+        db.prepare('DELETE FROM usage_stats WHERE date < ?').run(yesterday);
+    },
+
+    getUserSessionCount: (userId) => {
+        const result = db.prepare('SELECT COUNT(*) as count FROM sessions WHERE user_id = ?').get(userId);
+        return result.count;
     }
 };
 

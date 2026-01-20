@@ -1,4 +1,4 @@
-const { validateApiKey } = require('../db/database');
+const { validateApiKey, getSession } = require('../db/database');
 
 const bearerAuth = (req, res, next) => {
     const authHeader = req.headers.authorization;
@@ -11,7 +11,7 @@ const bearerAuth = (req, res, next) => {
     }
 
     const apiKey = authHeader.substring(7); // Remove 'Bearer '
-    const deviceId = req.body.deviceId || req.query.deviceId;
+    const deviceId = req.params.deviceId || req.query.deviceId || (req.body && req.body.deviceId);
 
     if (!deviceId) {
         return res.status(400).json({
@@ -25,6 +25,20 @@ const bearerAuth = (req, res, next) => {
             success: false,
             error: 'Invalid API key for this device'
         });
+    }
+
+    // Get session to find user_id
+    const session = getSession(deviceId);
+    if (session && session.user_id) {
+        const { getUserById } = require('../db/database');
+        const user = getUserById(session.user_id);
+        if (user) {
+            req.user = {
+                userId: user.id,
+                username: user.username,
+                role: user.role
+            };
+        }
     }
 
     req.deviceId = deviceId;

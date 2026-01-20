@@ -1,9 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
+const adminQuotaController = require('../controllers/adminQuotaController');
 
 // Get all users
 router.get('/users', adminController.getAllUsers);
+
+// Quota management routes
+router.get('/users-quotas', adminQuotaController.listUsersWithQuotas);
+router.get('/users/:id/quotas', adminQuotaController.getUserQuotaDetails);
+router.put('/users/:id/quotas', adminQuotaController.updateUserQuotas);
 
 // Toggle user verification
 router.post('/users/:id/verify', adminController.verifyUser);

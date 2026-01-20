@@ -5,7 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cloud Whatsapp - Sessions</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/client.css">
+    <link rel="stylesheet" href="/css/client-quota.css">
 </head>
 
 <body>
@@ -41,6 +43,51 @@
                 </svg>
                 Create New Session
             </button>
+            <button class="btn upload-btn" onclick="window.location.href='/upload'">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                File Upload
+            </button>
+        </div>
+
+        <!-- Quota Widget -->
+        <div id="quotaWidget" class="quota-widget">
+            <div class="quota-header">
+                <h3>📊 Your Account Limits</h3>
+                <div id="quotaExpiry" class="quota-expiry"></div>
+            </div>
+            <div class="quota-grid">
+                <div class="quota-item">
+                    <div class="quota-label">Devices</div>
+                    <div class="quota-progress">
+                        <div class="quota-bar">
+                            <div id="devicesBar" class="quota-bar-fill"></div>
+                        </div>
+                        <div id="devicesText" class="quota-text">0/5</div>
+                    </div>
+                </div>
+                <div class="quota-item">
+                    <div class="quota-label">Messages Today</div>
+                    <div class="quota-progress">
+                        <div class="quota-bar">
+                            <div id="messagesBar" class="quota-bar-fill"></div>
+                        </div>
+                        <div id="messagesText" class="quota-text">0/1000</div>
+                    </div>
+                </div>
+                <div class="quota-item">
+                    <div class="quota-label">Storage</div>
+                    <div class="quota-progress">
+                        <div class="quota-bar">
+                            <div id="storageBar" class="quota-bar-fill"></div>
+                        </div>
+                        <div id="storageText" class="quota-text">0/500 MB</div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div id="sessions-container"></div>
@@ -92,6 +139,7 @@
     </div>
 
     <script src="/js/client.js"></script>
+    <script src="/js/client-quota.js"></script>
 </body>
 
 </html>

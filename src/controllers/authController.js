@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { createUser, getUserByUsername, updateUser, getUserById, getAllUsers } = require('../db/database');
+const { createUser, getUserByUsername, updateUser, getUserById, getAllUsers, updateUserQuota } = require('../db/database');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-123';
 
@@ -29,9 +29,27 @@ const authController = {
                 createUser(username, hashedPassword, 'admin', 1);
                 res.json({ success: true, message: 'Admin account created successfully. You can now log in.' });
             } else {
-                // Subsequent users are clients and require verification
-                createUser(username, hashedPassword, 'client', 0);
-                res.json({ success: true, message: 'Account created. Please wait for admin verification.' });
+                // Subsequent users are auto-verified clients with trial quota
+                const result = createUser(username, hashedPassword, 'client', 1); // Auto-verified
+                const newUserId = result.lastInsertRowid;
+
+                // Assign trial quota: 1 device, 100 messages, 3 days trial
+                const trialExpiryDate = new Date();
+                trialExpiryDate.setDate(trialExpiryDate.getDate() + 3);
+
+                updateUserQuota(newUserId, {
+                    device_limit: 1,
+                    message_quota_daily: 100,
+                    message_quota_monthly: 100,
+                    storage_limit_mb: 50,
+                    account_expiry: trialExpiryDate.toISOString().split('T')[0],
+                    is_quota_unlimited: 0
+                });
+
+                res.json({
+                    success: true,
+                    message: 'Account created successfully! You can now log in. (3-day trial: 1 device, 100 messages)'
+                });
             }
         } catch (error) {
             res.status(500).json({ success: false, error: error.message });
@@ -55,10 +73,6 @@ const authController = {
             const isMatch = await bcrypt.compare(password, user.password);
             if (!isMatch) {
                 return res.status(401).json({ success: false, error: 'Invalid username or password' });
-            }
-
-            if (user.is_verified === 0) {
-                return res.status(403).json({ success: false, error: 'Account pending verification' });
             }
 
             const token = jwt.sign(

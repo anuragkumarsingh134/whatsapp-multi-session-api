@@ -4,6 +4,7 @@ const path = require('path');
 const sessionRoutes = require('./routes/sessions');
 const messageRoutes = require('./routes/messages');
 const authRoutes = require('./routes/auth');
+const fileRoutes = require('./routes/files');
 const { initializeSessions } = require('./services/sessionManager');
 
 const app = express();
@@ -12,10 +13,14 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+// Serve uploaded files
+app.use('/files', express.static(path.join(__dirname, '../uploads')));
+
 // Serve static files (Dashboard)
 app.use(express.static('public'));
 
 const adminRoutes = require('./routes/admin');
+const userQuotaRoutes = require('./routes/userQuota');
 const userAuth = require('./middleware/userAuth');
 const adminAuth = require('./middleware/adminAuth');
 
@@ -23,6 +28,8 @@ const adminAuth = require('./middleware/adminAuth');
 app.use('/api/auth', authRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/files', fileRoutes);
+app.use('/api/user', userQuotaRoutes);
 app.use('/api/admin', userAuth, adminAuth, adminRoutes);
 
 // Auth pages
@@ -57,6 +64,11 @@ app.get('/profile', (req, res) => {
 // Admin User Sessions page route
 app.get('/admin/sessions', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/admin-sessions.html'));
+});
+
+// File Upload page route
+app.get('/upload', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/upload.html'));
 });
 
 app.listen(PORT, async () => {

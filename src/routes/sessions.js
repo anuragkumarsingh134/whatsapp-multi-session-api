@@ -2,15 +2,19 @@ const express = require('express');
 const router = express.Router();
 const sessionController = require('../controllers/sessionController');
 const userAuth = require('../middleware/userAuth');
+const { checkAccountExpiry, checkDeviceLimit } = require('../middleware/quotaValidator');
 
 // Apply userAuth to all routes
 router.use(userAuth);
 
+// Apply account expiry check to all routes
+router.use(checkAccountExpiry);
+
 // List all sessions for current user
 router.get('/', sessionController.listSessions);
 
-// Create new session for current user
-router.post('/', sessionController.createSession);
+// Create new session for current user (with device limit check)
+router.post('/', checkDeviceLimit, sessionController.createSession);
 
 // Start session manually
 router.post('/:deviceId/start', sessionController.startSession);

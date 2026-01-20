@@ -1,5 +1,5 @@
 const sessionManager = require('../services/sessionManager');
-const { validateApiKey } = require('../db/database');
+const { validateApiKey, incrementMessageCount, getSession, getUserById } = require('../db/database');
 
 const messageController = {
     // Send message (requires Bearer auth)
